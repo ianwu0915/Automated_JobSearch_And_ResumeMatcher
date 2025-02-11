@@ -45,15 +45,31 @@ def print_job_details(details):
         salary = description[description.find("[$"):].split("]")[0] + "]"
         print(f"Salary Range: {salary}")
     
+    apply_method = {}
+    
     apply_method = details.get('applyMethod', {}).get('com.linkedin.voyager.jobs.OffsiteApply', {})
-    print(f"Application Type: {'External Apply'}")
-    print(f"Apply URL: {apply_method.get('companyApplyUrl', 'N/A')}")
+    if apply_method == {}:
+        apply_method = details.get('applyMethod', {}).get('com.linkedin.voyager.jobs.ComplexOnsiteApply', {})
+    
+    
+    # it might be easyApplyUrl or companyApplyUrl
+    
+    if 'companyApplyUrl' in apply_method:
+        print(f"Application Type: {'External Apply'}") 
+        print(f"Apply URL: {apply_method.get('companyApplyUrl', 'N/A')}") 
+    
+    if 'easyApplyUrl' in apply_method:
+        print(f"Application Type: {'Easy Apply'}") 
+        print(f"Apply URL: {apply_method.get('easyApplyUrl', 'N/A')}") 
+        
     
     listed_time = details.get('listedAt', 'N/A')
     print(f"Posted Date: {listed_time}")
     print(f"Job ID: {details.get('jobPostingId', 'N/A')}")
     print("\n" + "="*50)
 
+def extract_job_details_using_regex_and_nlp(details):
+    """Extract job details using regex and NLP"""
 def main():
     search_params = {
     "keywords": "Software Engineer",
@@ -67,10 +83,11 @@ def main():
     job_search=JobSearch()
     jobs=job_search.search_jobs(search_params)
     
+    
     for job in jobs:
         job_id = job["entityUrn"].split(":")[-1]
         details = job_search.get_job_details_by_id(job_id)
-        
+        # print(details)
         print_job_details(details)
 
 
