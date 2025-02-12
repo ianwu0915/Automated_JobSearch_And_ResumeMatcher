@@ -1,7 +1,10 @@
 from linkedin_api import Linkedin
 from dotenv import load_dotenv
 import os
+import pandas as pd
+import json
 from pathlib import Path
+from data_extraction import extract_job_sections
 
 class JobSearch:
     def __init__(self):
@@ -38,7 +41,7 @@ def print_job_details(details):
     print(f"Workplace Type: {workplace_type}")
     
     description = details.get('description', {}).get('text', 'N/A')
-    print(f"Description: {description[:200]}..." if len(description) > 200 else description)
+    # print(f"Description: {description[:200]}..." if len(description) > 200 else description)
     
     # Extract salary from description if present (since it's in the text)
     if "[$" in description:
@@ -68,8 +71,7 @@ def print_job_details(details):
     print(f"Job ID: {details.get('jobPostingId', 'N/A')}")
     print("\n" + "="*50)
 
-def extract_job_details_using_regex_and_nlp(details):
-    """Extract job details using regex and NLP"""
+
 def main():
     search_params = {
     "keywords": "Software Engineer",
@@ -77,19 +79,52 @@ def main():
     "remote": ["2"],  # Remote jobs only
     "experience": ["2", "3"],  # Entry level and Associate
     "job_type": ["F", "C"],  # Full-time and Contract
-    "limit": 2,
+    "limit": 5,
     }
     
     job_search=JobSearch()
     jobs=job_search.search_jobs(search_params)
     
+    extract_datas = {}
     
     for job in jobs:
         job_id = job["entityUrn"].split(":")[-1]
         details = job_search.get_job_details_by_id(job_id)
+        # skills = job_search.api.get_job_skills(job_id) -> match your linkedin profile skill with jd 
+        # print(skills)
         # print(details)
         print_job_details(details)
+        
+        description = details.get('description', {}).get('text', '')
+        if description:
+            # print(description)
+            extract_detail = extract_job_sections(description)
+        print("-----------------------------")
+        # print(extract_detail)
+        extract_datas[job_id] = extract_detail
+        
+    # Create output directory if it doesn't exist
+    output_dir = Path("output")
+    output_dir.mkdir(exist_ok=True)
 
+    # Convert to DataFrame and transpose for better readability
+    df = pd.DataFrame(extract_datas).T  # Transpose to have job IDs as index
 
+    # Save data with error handling
+    try:
+        # Save to JSON
+        json_path = output_dir / "job_data.json"
+        with open(json_path, "w", encoding="utf-8") as f:
+            json.dump(extract_datas, f, indent=4, ensure_ascii=False)
+
+        # Save to Excel
+        excel_path = output_dir / "job_data.xlsx"
+        df.to_excel(excel_path, index=True, index_label="Job ID")
+        
+        print(f"Data saved successfully to:\n- {json_path}\n- {excel_path}")
+    except Exception as e:
+        print(f"Error saving data: {e}")
+
+    
 if __name__=="__main__":
     main()

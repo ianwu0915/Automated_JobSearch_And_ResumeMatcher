@@ -20,3 +20,5 @@ Thumbs.db
 #sensitive data
 resume.pdf
 .env
+
+/output/*
