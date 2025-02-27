@@ -1,1 +1,0 @@
-        print(extract_detail)
