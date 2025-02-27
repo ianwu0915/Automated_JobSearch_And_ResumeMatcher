@@ -4,7 +4,7 @@ import os
 import pandas as pd
 import json
 from pathlib import Path
-from data_extraction import extract_job_sections
+from main_project.src.modules.data_processing.data_extraction import extract_job_sections
 
 class JobSearch:
     def __init__(self):
