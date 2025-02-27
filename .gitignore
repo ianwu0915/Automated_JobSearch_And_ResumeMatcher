@@ -21,4 +21,8 @@ Thumbs.db
 resume.pdf
 .env
 
-/output/*
+#output
+output/
+
+#tempCodeRunnerFile
+./data_processing/tempCodeRunnerFile.py
