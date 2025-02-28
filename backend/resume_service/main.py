@@ -1,16 +1,15 @@
 from fastapi import FastAPI
 from routes import router
 from database import initialize_database
+from contextlib import asynccontextmanager
 
-app = FastAPI(title="Resume Service API")
-
-@app.on_event("startup")
-async def startup_event():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
     initialize_database()
+    yield
 
-@app.on_event("shutdown")
-async def shutdown_event():
-    close_database_connection()
+app = FastAPI(title="Resume Service API", lifespan=lifespan)
 
 app.include_router(router)
 

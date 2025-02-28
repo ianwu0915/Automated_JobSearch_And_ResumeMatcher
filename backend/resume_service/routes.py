@@ -1,17 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, BackgroundTasks
-from typing import Dict, Any, List
+from typing import Dict, Any
 import uuid
-import json
 import os
 import tempfile
 import aiofiles
 
-from database import get_db_connection, get_db_cursor
-from models import ResumeData
-from utils.file_processors import extract_text_from_file, SUPPORTED_MIME_TYPES
-from utils.ai_helpers import parse_resume_with_ai
-from services.resume_processor import process_resume_background
-from services.redis_service import RedisService
+from database import get_db_cursor
+from utils.file_processors import SUPPORTED_MIME_TYPES
+from utils.resume_processor import process_resume_background
+from utils.redis_service import RedisService
 
 router = APIRouter(prefix="/api/resumes", tags=["resumes"])
 redis_service = RedisService()

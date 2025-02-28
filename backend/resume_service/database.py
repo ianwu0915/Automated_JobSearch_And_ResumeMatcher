@@ -5,6 +5,8 @@ from config import settings
 
 from contextlib import contextmanager
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def get_db_connection():
     """
@@ -60,8 +62,10 @@ def initialize_database():
     Initialize database tables if they don't exist.
     Call this function when starting the application.
     """
+    logger.info("Starting database initialization...")
     with get_db_cursor(commit=True) as cursor:
         # Create tables if they don't exist
+        logger.info("Creating user_resumes table if not exists...")
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS user_resumes (
             id SERIAL PRIMARY KEY,
@@ -77,12 +81,13 @@ def initialize_database():
         """)
         
         # Create indexes for faster queries
+        logger.info("Creating indexes...")
         cursor.execute("""
         CREATE INDEX IF NOT EXISTS idx_user_resumes_user_id ON user_resumes(user_id);
         CREATE INDEX IF NOT EXISTS idx_user_resumes_resume_id ON user_resumes(resume_id);
         """)
         
-        logging.info("Database initialized successfully")
+        logger.info("Database initialization completed successfully!")
 
 def execute_query(query, params=None, fetch_one=False):
     """
