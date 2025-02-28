@@ -2,8 +2,9 @@ import pytest
 from pathlib import Path
 import os
 import shutil
-import asyncio
+import json
 from resume_service.utils.file_processors import extract_text_from_file, SUPPORTED_MIME_TYPES
+from resume_service.utils.ai_helpers import parse_resume_with_ai
 
 @pytest.fixture
 def test_files_dir():
@@ -48,6 +49,18 @@ async def test_extract_text_from_pdf(sample_files):
     print(f"Saved PDF extraction to: {output_path}")
     assert len(result) > 0
     assert any(term in result.lower() for term in ["education", "experience", "skills", "projects"])
+    
+    parsed_result = await parse_resume_with_ai(result)
+    print(f"Parsed result: {parsed_result}")
+    assert parsed_result is not None
+    assert "skills" in parsed_result
+    assert "experience" in parsed_result
+    assert "education" in parsed_result
+    assert "projects" in parsed_result
+    
+    output_path = Path("test_files/parsed_pdf.json")
+    output_path.write_text(json.dumps(parsed_result, indent=4))
+    print(f"Saved parsed result to: {output_path}")
 
 @pytest.mark.asyncio
 async def test_extract_text_from_docx(sample_files):
@@ -64,7 +77,13 @@ async def test_extract_text_from_docx(sample_files):
     print(f"Saved DOCX extraction to: {output_path}")
     assert len(result) > 0
     assert any(term in result.lower() for term in ["resume", "experience", "education", "skills"])
-
+    
+# @pytest.mark.asyncio
+# async def test_parse_resume_with_ai(text_files):
+#     """Test parsing a resume with AI"""
+#     if "pdf" not in text_files:
+#         pytest.skip("PDF file not found")
+        
 
 def test_supported_mime_types():
     assert "application/pdf" in SUPPORTED_MIME_TYPES
