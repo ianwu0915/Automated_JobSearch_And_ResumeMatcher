@@ -1,0 +1,39 @@
+YA-TING YANG
+College Park, MD｜(202) 981-4835｜yating.yang007@gmail.com｜www.linkedin.com/in/yang-ya-ting
+EDUCATION
+University of Maryland, College Park	Sep 2022 - May 2024 (Expected)
+Master of Information Management, GPA: 3.8/4.0 	College Park, MD
+Coursework: Web Development, Database Design, Data Science, Machine Learning, Natural Language Processing, Cloud Security 
+Fu Jen Catholic University 	Sep 2013- Jun 2017
+Bachelor of Arts in Advertising & Public Relations, GPA: 3.3/4.0	 Taiwan
+WORK EXPERIENCE
+University of Maryland, College of Information Studies 	Sep 2023 - Present
+Teaching Assistant (Object-Oriented Programming for Information Science, Python) 	College Park, MD
+Led object-oriented programming in Python workshops, guiding students on understanding fundamental concepts. 
+Conducted 300+ code reviews utilizing peer programming techniques to ensure students produced well-structured Python code, enhancing readability and adherence to best practices.
+Tagnology 	Feb 2022 - Feb 2023
+Front-End Engineer	Taiwan (Remote)
+Developed the frontend for 5 web applications, using JavaScript, React.js, Node.js, and Next.js within an Agile framework, creating 4 new sub-products that diversified the product suite for marketing technologies.
+Led the front-end engineering of a blockchain marketplace with JavaScript, React.js, Node.js, Redux, Ethers.js, and Web3 technologies, initiating the company's successful entry into the blockchain market.
+Created an interactive canvas feature for product customization, enhancing the user interface of the e-commerce platform Next.js's server-side rendering, optimizing SEO and cutting page load times from 4s to 2.5s.
+Implemented a multilingual, information-centric blockchain website with React.js, Next.js, and Material-UI; integrated i18next for dynamic translation, establishing it as a key resource for industry insights and enhancing user engagement.
+Built a B2B portal to bridge brands with influencers using React.js, broadening the service range and deepening the integration of the company's adtech capabilities.
+Tagnology 	Aug 2021 - Feb 2022
+Front-End Engineer Intern 	Taiwan (Remote)
+Developed an Instagram chatbot flow builder using JavaScript, React.js, and Node.js, with a responsive node-based UI for cross-device compatibility, automating marketing event interactions and enhancing marketing efficiency.
+Boosted average query execution speeds from 200ms to 100ms by resolving 60+ issues, including memory leaks and asynchronous execution errors, and refactored 3000+ lines of code to enhance maintainability. 
+PROJECTS
+UMD Virtual Marketplace Platform	Sep 2022 – Dec 2022
+Designed and implemented a responsive web application using JavaScript, React.js, and Node.js for the frontend and Flask with MySQL for the backend. 
+Served as the front-end engineer in an Agile team of 4, collaborating with the back-end engineer on RESTful API development and database integration.
+Nutrition Tracking & Image Recognition App (Google 2021 Solution Challenge) 	Jan 2021 – Mar 2021
+Built a Kotlin-based Android application for diet tracking using Android Studio IDE, with a macro and calorie counting function leveraging the MVVM design pattern, as an App Developer in a team of 5. 
+Implemented image recognition using Firebase ML Kit APIs to enable automatic detection/identification of food items.
+Career Services Business Intelligence Database	Mar 2023 – May 2023
+Designed and developed MySQL database schema for the Office of Career Services, transforming data management by replacing Excel-based reporting with a solution that enhances data modeling for faster retrieval and analysis.
+SKILLS
+Languages: Java, JavaScript, HTML/CSS, SQL, Python, R, Kotlin
+Frameworks/Libraries: React, Next.js, Express, Redux, Material-UI, Ethers.js, Flask
+Tools/Technologies: Node.js, ECMAScript 6, MySQL, AWS, GCP, Azure, Git, GitHub, Visual Studio Code, Postman, Figma, PyCharm, Firebase ML Kit, Android Studio IDE
+Other: REST API, Agile Methodology, Front-End Development, Blockchain Solutions, Web3 Technologies 
+Certifications: Algorithm Labs (National Taiwan University, Nov 2021), Java Programming (National Taiwan University, Aug 2021), Full Stack Web Development Bootcamp Program (Alpha Camp, Jan 2021) 

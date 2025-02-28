@@ -1,0 +1,49 @@
+IAN(HSINYEN ) WU
+Chicago, IL
+♂phone(469) 497-7719 /envel⌢pewu.hsin@northeastern.edu /linkedinlinkedin.com/in/ianwu0915 /gl⌢beianwu.netlify.app
+EDUCATION
+Northeastern University Sep 2022 – May 2025
+Master of Science in Computer Science, GPA: 3.73/4.0 Boston, MA
+•Courses: Algorithm, Object-Oriented Design, Cloud Computing, Computer Networking, Mobile Development,
+Database Design, Web Development, Machine Learning
+WORK EXPERIENCE
+Stealth Startup Oct 2024 – Present
+Software Engineer Intern Chicago, IL
+•Parallelized 1,000+ high-frequency trading simulations , by redesigning monolithic task scheduling system into a
+distributed, cloud-native platform using Rust.
+•Designed fault-tolerant master-worker architecture for asynchronous task communication using NATS JetStream,
+Kubernetes, and AWS S3 storage.
+•Ensuring system resilience and continuous operation through leader election with etcd for master node.
+AI Roboto Edu May 2024 – Oct 2024
+Full Stack Engineer Intern Los Angeles, CA
+•Developed a full-stack solution for an online education startup using Spring Boot, MySQL, React, and Redux.
+•Optimized backend APIs, cutting response time by 20% through MySQL query optimization, caching, and
+efficient data handling.
+•Improved responsiveness and reducing TTI by 15% by implementing asynchronous Redux state management.
+•Automated development workflows with Bash scripts, accelerating release cycles and enhancing team efficiency.
+PROJECTS
+AI Job Search & Match platform (Python |Open AI |FastAPI) /github
+•Developed an AI-driven job matching system using OpenAI embeddings and FAISS, improving match accuracy by
+40% through vectorized resume-to-job comparison.
+•Reduced job processing time by 70% , using multi-threading and Redis caching to eliminate redundant API calls.
+•Automated job data processing and structured storage by designing scalable ETL pipeline with FastAPI, Redis,
+and PostgreSQL.
+High-Performance E-Commerce Platform (Java |Spring Cloud |AWS) /github
+•Architected scalable microservices e-commerce platform using Spring Cloud, AWS RDS, API Gateway and MySQL,
+delivering end-to-end user journeys from product discovery to checkout completion.
+•Improved system throughput by 40%, handling 1,200 messages per second with load balancing and
+asynchronous processing using Kafka.
+•Reduced shopping cart query latency by 87.5% (from 800ms to 100ms) using Redis for high-concurrency
+caching.
+Distributed KV Storage System (Java |Distributed System) /github
+•Achieved 14,000 QPS for mixed read/write workloads and a P99 latency of 200ms , by developing a distributed
+Key-Value store using Java.
+•Ensured strong consistency with dynamic leader election and log replication , by implementing Raft consensus
+algorithm.
+•Improve stability by reducing master-switching frequency , using Prevote optimization technique.
+TECHNICAL SKILLS
+Programming Languages: Java, Python, Rust, SQL, Shell, HTML/CSS, JavaScript, TypeScript
+Frameworks: Spring Boot, Spring Cloud, React.js, Next.js, Express.js, FastAPI, Redux
+Databases: MySQL, PostgreSQL, Redis, MongoDB, etcd
+System & Cloud: Linux, AWS, GCP , Kubernetes, Git
+Others: Nginx, Kafka, Agile Development
