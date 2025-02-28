@@ -1,55 +1,107 @@
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Text
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-from datetime import datetime
-from dotenv import load_dotenv
-import os
+import psycopg2
+import logging
+from psycopg2.extras import RealDictCursor
+from config import settings
 
-# Load environment variables
-load_dotenv()
+from contextlib import contextmanager
 
-# Database configuration
-Database_url = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/job_db")
-engine = create_engine(Database_url)
-SessionLocal = sessionmaker(bind=engine)
-Base = declarative_base()
 
-# Job Table Schema 
-class Job(Base):
-    __tablename__ = "jobs"
+def get_db_connection():
+    """
+    Create and return a connection to the PostgreSQL database.
+    """
+    try:
+        connection = psycopg2.connect(
+            host=settings.DB_HOST,
+            port=settings.DB_PORT,
+            dbname=settings.DB_NAME,
+            user=settings.DB_USER,
+            password=settings.DB_PASSWORD
+        )
+        # Set autocommit to False to manage transactions explicitly
+        connection.autocommit = False
+        
+        return connection
+    except Exception as e:
+        logging.error(f"Database connection error: {str(e)}")
+        raise Exception(f"Failed to connect to database: {str(e)}")
 
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    title = Column(String, nullable=False)
-    company = Column(String, nullable=False)
-    location = Column(String, nullable=False)
-    workplace_type = Column(String, nullable=False)
-    skills = Column(Text, nullable=False)
-    experience_level = Column(String, nullable=False)
-    salary = Column(String, nullable=False)
-    apply_url = Column(String, nullable=False)
+@contextmanager
+def get_db_cursor(commit=False):
+    """
+    Context manager for database connections.
+    Automatically handles connection cleanup and optionally commits.
+    
+    Usage:
+        with get_db_cursor() as cursor:
+            cursor.execute("SELECT * FROM table")
+            results = cursor.fetchall()
+    """
+    connection = None
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor(cursor_factory=RealDictCursor) # return results as dictionaries
+        yield cursor  # yield: return the cursor object to the caller
+        if commit:
+            connection.commit()
+    except Exception as e:
+        if connection:
+            connection.rollback()
+        logging.error(f"Database error: {str(e)}")
+        raise
+    finally:
+        if connection:
+            cursor.close()
+            connection.close()
 
-Base.metadata.create_all(bind=engine)
+# Optional: Function to initialize the database tables
+def initialize_database():
+    """
+    Initialize database tables if they don't exist.
+    Call this function when starting the application.
+    """
+    with get_db_cursor(commit=True) as cursor:
+        # Create tables if they don't exist
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS user_resumes (
+            id SERIAL PRIMARY KEY,
+            user_id VARCHAR(50) NOT NULL,
+            resume_id VARCHAR(50) UNIQUE NOT NULL,
+            skills JSONB,
+            experience JSONB,
+            education JSONB,
+            projects JSONB,
+            raw_text TEXT,
+            created_at TIMESTAMP NOT NULL DEFAULT NOW()
+        )
+        """)
+        
+        # Create indexes for faster queries
+        cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_user_resumes_user_id ON user_resumes(user_id);
+        CREATE INDEX IF NOT EXISTS idx_user_resumes_resume_id ON user_resumes(resume_id);
+        """)
+        
+        logging.info("Database initialized successfully")
 
-def save_job(job_data):
-    session = SessionLocal()
-    job = Job(
-        listed_date=job_data["listed_date"],
-        job_title=job_data["job_title"],
-        company=job_data["company"],
-        location=job_data["location"],
-        workplace_type=job_data["workplace_type"],
-        skills=job_data["skills"],
-        experience_level=job_data["experience_level"],
-        salary=job_data["salary"],
-        apply_url=job_data["apply_url"]
+def execute_query(query, params=None, fetch_one=False):
+    """
+    Execute a query and return results.
+    # Example usage:
+    resume = execute_query(
+        "SELECT * FROM user_resumes WHERE resume_id = %s", 
+        (resume_id,), 
+        fetch_one=True
     )
-    session.add(job)
-    session.commit()
-    session.close()
-    
-def get_jobs():
-    session = SessionLocal()
-    jobs = session.query(Job).all()
-    session.close()
-    return jobs
-    
+    """
+    with get_db_cursor() as cursor:
+        cursor.execute(query, params or ())
+        if fetch_one:
+            return cursor.fetchone()
+        return cursor.fetchall()
+def close_database_connection():
+    """
+    Close the database connection.
+    """
+    connection = get_db_connection()
+    connection.close()
