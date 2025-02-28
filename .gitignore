@@ -29,3 +29,14 @@ output/
 
 #data
 data/
+
+#myenv
+myenv/
+
+# Python virtual environment
+**/myenv/
+*.so
+*.pyc
+*.egg-info/
+dist/
+build/

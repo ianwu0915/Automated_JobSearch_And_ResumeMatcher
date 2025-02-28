@@ -2,10 +2,16 @@ import asyncio
 import json
 from typing import Dict
 import tiktoken
-import openai
+from openai import OpenAI
 import os
+from dotenv import load_dotenv
 
-openai_client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+load_dotenv() 
+
+# Initialize the OpenAI client without proxies
+openai_client = OpenAI(
+    api_key=os.getenv("OPENAI_API_KEY")
+)
 
 async def parse_resume_with_ai(resume_text: str) -> Dict:
     """Use OpenAI to parse resume text into structured format"""

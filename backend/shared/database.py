@@ -1,10 +1,16 @@
+# services/resume_parser/database.py (similar for other services)
+import os
 import psycopg2
-import logging
 from psycopg2.extras import RealDictCursor
-from config import settings
-
+import logging
 from contextlib import contextmanager
 
+# Get database connection parameters from environment variables
+DB_HOST = os.getenv("DB_HOST", "localhost")
+DB_PORT = os.getenv("DB_PORT", "5432")
+DB_NAME = os.getenv("DB_NAME", "resume_job_matching")
+DB_USER = os.getenv("DB_USER", "postgres")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "password")
 
 def get_db_connection():
     """
@@ -12,11 +18,11 @@ def get_db_connection():
     """
     try:
         connection = psycopg2.connect(
-            host=settings.DB_HOST,
-            port=settings.DB_PORT,
-            dbname=settings.DB_NAME,
-            user=settings.DB_USER,
-            password=settings.DB_PASSWORD
+            host=DB_HOST,
+            port=DB_PORT,
+            dbname=DB_NAME,
+            user=DB_USER,
+            password=DB_PASSWORD
         )
         # Set autocommit to False to manage transactions explicitly
         connection.autocommit = False
@@ -40,8 +46,8 @@ def get_db_cursor(commit=False):
     connection = None
     try:
         connection = get_db_connection()
-        cursor = connection.cursor(cursor_factory=RealDictCursor) # return results as dictionaries
-        yield cursor  # yield: return the cursor object to the caller
+        cursor = connection.cursor(cursor_factory=RealDictCursor)
+        yield cursor
         if commit:
             connection.commit()
     except Exception as e:
@@ -99,4 +105,9 @@ def execute_query(query, params=None, fetch_one=False):
         if fetch_one:
             return cursor.fetchone()
         return cursor.fetchall()
-    
+def close_database_connection():
+    """
+    Close the database connection.
+    """
+    connection = get_db_connection()
+    connection.close()

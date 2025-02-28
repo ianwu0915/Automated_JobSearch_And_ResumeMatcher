@@ -4,7 +4,7 @@ from fastapi import HTTPException
 import pandas as pd
 import aiofiles
 from pypdf import PdfReader
-import docx2txt
+from docx import Document
 import mammoth
 
 from utils.lazy_module import LazyModule
@@ -20,36 +20,38 @@ SUPPORTED_MIME_TYPES = {
     "text/plain": "txt"
 }
 
-class FileHandler:
-    async def extract_text_from_file(file_path: str, file_type: str) -> str:
-        """Extract text from different file types"""
-        try:
-            if file_type == "pdf":
-                reader = PdfReader(file_path)
-                text = ""
-                for page in reader.pages:
-                    text += page.extract_text() + "\n"
-                return text
-            
-            elif file_type == "docx":
-                text = docx2txt.process(file_path)
-                return text
-            
-            elif file_type == "doc":
-                with open(file_path, "rb") as docx_file:
-                    result = mammoth.convert_to_html(docx_file)
-                    return result.value
-            
-            elif file_type == "txt":
-                async with aiofiles.open(file_path, 'r') as f:
-                    return await f.read()
-            
-            else:
-                raise ValueError(f"Unsupported file type: {file_type}")
+async def extract_text_from_file(file_path: str, file_type: str) -> str:
+    """Extract text from different file types"""
+    try:
+        if file_type == "pdf":
+            reader = PdfReader(file_path)
+            text = ""
+            for page in reader.pages:
+                text += page.extract_text() + "\n"
+            return text
         
-        except Exception as e:
-            print(f"Error extracting text: {str(e)}")
-            raise HTTPException(status_code=500, detail=f"Failed to extract text: {str(e)}")
+        elif file_type == "docx":
+            doc = Document(file_path)
+            full_text = []
+            for paragraph in doc.paragraphs:
+                full_text.append(paragraph.text)
+            return '\n'.join(full_text)
+        
+        elif file_type == "doc":
+            with open(file_path, "rb") as docx_file:
+                result = mammoth.convert_to_html(docx_file)
+                return result.value
+        
+        elif file_type == "txt":
+            async with aiofiles.open(file_path, 'r') as f:
+                return await f.read()
+        
+        else:
+            raise ValueError(f"Unsupported file type: {file_type}")
+    
+    except Exception as e:
+        print(f"Error extracting text: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to extract text: {str(e)}")
 
 class ExcelFileHandler:
     @staticmethod
