@@ -6,16 +6,17 @@ from dateutil.relativedelta import relativedelta
 import calendar
 from typing import Dict, List, Any, Optional, Set, Tuple, Union
 import logging
-
 from text_processor import TextProcessor
 from skills_taxonomy import SkillTaxonomy
 
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 class FeatureExtractor:
-    def __init__(self, text_processor: TextProcessor, skill_taxonomy: SkillTaxonomy):
-        self.text_processor = text_processor
-        self.skill_taxonomy = skill_taxonomy
+    def __init__(self):
+        self.text_processor = TextProcessor()
+        self.skill_taxonomy = SkillTaxonomy()
     
     def extract_resume_skills(self, text: str, sections: Dict[str, str]) -> List[str]:
         """
@@ -76,13 +77,13 @@ class FeatureExtractor:
         """Extract standardized features from resume text"""
         # Normalize text for processing
         normalized_text = self.text_processor.normalize_text(resume_text)
-        
+        print("Normalized text: ", normalized_text)
         # If sections not provided, try to extract them
         if not sections:
             sections = self._extract_resume_sections(normalized_text)
         
         # Extract features
-        work_experience_years = self._calculate_experience_years_from_resume(sections.get('experience', ''))
+        work_experience_years = self._calculate_experience_years_from_resume(normalized_text)
         skills = self.extract_resume_skills(normalized_text, sections)
         word_frequencies = self._extract_word_frequencies(normalized_text)
         
@@ -96,7 +97,7 @@ class FeatureExtractor:
         """Extract standardized features from job description"""
         # Normalize text
         normalized_text = self.text_processor.normalize_text(job_text)
-        
+    
         # Extract job sections
         sections = self._extract_job_sections(normalized_text)
         
@@ -183,100 +184,86 @@ class FeatureExtractor:
         
         return sections
     
-    def _calculate_experience_years_from_resume(self, experience_text: str) -> float:
-        """
-        Calculate total years of professional experience from experience section
+    def _calculate_months_between(self, start_date: datetime, end_date: datetime) -> int:
+        """Calculate number of months between two dates"""
+        print(f"Calculating months between {start_date.strftime('%b %Y')} and {end_date.strftime('%b %Y')}")
+        if not start_date or not end_date:
+            return 0
         
-        Args:
-            experience_text: Text from the experience section of resume
+        # Calculate years and months separately
+        years = end_date.year - start_date.year
+        months = end_date.month - start_date.month
+        
+        # Total months
+        total_months = (years * 12) + months
+        
+        print(f"Calculating months between {start_date.strftime('%b %Y')} and {end_date.strftime('%b %Y')}: {total_months} months")
+        return total_months
+    
+    def _parse_date_range(self, date_range: str) -> Tuple[datetime, datetime]:
+        """Parse a date range string into start and end dates"""
+        try:
+            # Split into start and end dates
+            start_str, end_str = re.split(r'\s*-\s*', date_range)
             
-        Returns:
-            Total years of experience as a float (rounded to 1 decimal place)
-        """
-        # Extract date ranges using regex
-        date_ranges = re.findall(
-            r'(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s*\d{4}\s*(?:-|–|to)\s*(?:(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s*\d{4}|present|current)',
-            experience_text,
-            re.IGNORECASE
+            # Handle 'present' case
+            if 'present' in end_str.lower():
+                end_date = datetime.now()
+            else:
+                # Parse end date (e.g., 'dec 2019')
+                end_date = datetime.strptime(end_str.strip(), '%b %Y')
+            
+            # Parse start date (e.g., 'jan 2020')
+            start_date = datetime.strptime(start_str.strip(), '%b %Y')
+            
+            return start_date, end_date
+        
+        except (ValueError, IndexError) as e:
+            print(f"Date parsing error: {e} for range: {date_range}")
+            return None, None
+    
+    def _calculate_experience_years_from_resume(self, text: str) -> float:
+        """Calculate total years of professional experience from resume text"""
+        print(f"\nAnalyzing experience text:\n{text}\n")  # Debug print
+        
+        # Convert text to lowercase for consistent matching
+        text = text.lower()
+        
+        # Find all month-year combinations and "present"
+        dates = re.findall(
+            r'(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s+\d{4}|present',
+            text
         )
+        print(f"Found dates: {dates}")  # Debug print
         
-        if not date_ranges:
-            # Try more flexible date patterns
-            date_ranges = re.findall(
-                r'\d{4}\s*(?:-|–|to)\s*(?:\d{4}|present|current)',
-                experience_text,
-                re.IGNORECASE
-            )
+        # Create date ranges, handling 'present' specially
+        job_entries = []
+        i = 0
+        while i < len(dates):
+            if i + 1 < len(dates):
+                if 'present' in dates[i]:
+                    i += 1
+                    continue
+                if 'present' in dates[i+1]:
+                    job_entries.append(f"{dates[i]} - present")
+                else:
+                    job_entries.append(f"{dates[i]} - {dates[i+1]}")
+            i += 1
         
-        if not date_ranges:
-            # Look for explicit mentions of experience years
-            experience_mention = re.search(r'(\d+)\+?\s*years?\s+(?:of\s+)?experience', experience_text, re.IGNORECASE)
-            if experience_mention:
-                return float(experience_mention.group(1))
-            return 0.0
+        print(f"Final job entries: {job_entries}")  # Debug print
         
-        # Calculate total non-overlapping time from each range
         total_months = 0
-        for date_range in date_ranges:
+        for date_range in job_entries:
             start_date, end_date = self._parse_date_range(date_range)
             if start_date and end_date:
-                # Calculate months between dates
                 months = self._calculate_months_between(start_date, end_date)
+                print(f"Calculated {months} months for range: {date_range}")  # Debug print
                 total_months += months
         
         # Convert to years (rounded to 1 decimal place)
-        return round(total_months / 12, 1)
-    
-    def _parse_date_range(self, date_range: str) -> Tuple[Optional[datetime], Optional[datetime]]:
-        """Parse a date range string into start and end datetime objects"""
-        # Clean and standardize the date range
-        date_range = date_range.lower().replace('–', '-').replace('to', '-')
-        parts = [p.strip() for p in date_range.split('-')]
-        
-        if len(parts) != 2:
-            return None, None
-        
-        start_str, end_str = parts
-        
-        # Parse start date
-        start_date = self._parse_date(start_str)
-        
-        # Parse end date (handle "present" or "current")
-        if 'present' in end_str or 'current' in end_str:
-            end_date = datetime.now()
-        else:
-            end_date = self._parse_date(end_str)
-        
-        return start_date, end_date
-    
-    def _parse_date(self, date_str: str) -> Optional[datetime]:
-        """Parse a date string into a datetime object"""
-        try:
-            # Check for month name + year format (e.g., "Jan 2020")
-            month_year_match = re.search(r'(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s*(\d{4})', date_str, re.IGNORECASE)
-            if month_year_match:
-                month_name = month_year_match.group(1).lower()
-                year = int(month_year_match.group(2))
-                month_num = {
-                    'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'jun': 6,
-                    'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12
-                }.get(month_name[:3], 1)
-                return datetime(year, month_num, 1)
-            
-            # Check for year only
-            year_match = re.search(r'\b(\d{4})\b', date_str)
-            if year_match:
-                return datetime(int(year_match.group(1)), 1, 1)
-            
-            return None
-        except (ValueError, AttributeError):
-            return None
-    
-    def _calculate_months_between(self, start_date: datetime, end_date: datetime) -> int:
-        """Calculate number of months between two dates"""
-        # Use relativedelta for accurate month difference
-        rd = relativedelta(end_date, start_date)
-        return rd.years * 12 + rd.months
+        years = round(total_months / 12, 1)
+        print(f"Total years calculated: {years}")  # Debug print
+        return years
     
     def _extract_required_experience(self, text: str) -> Optional[float]:
         """Extract required years of experience from job description"""
@@ -347,23 +334,21 @@ class FeatureExtractor:
 
 # Example usage
 if __name__ == "__main__":
-    # Initialize dependencies
-    text_processor = TextProcessor()
-    skill_taxonomy = SkillTaxonomy()
+    # Initialize with mock implementations for testing
     
     # Create feature extractor
-    extractor = FeatureExtractor(text_processor, skill_taxonomy)
+    extractor = FeatureExtractor()
     
     # Example resume text
     resume_text = """
     PROFESSIONAL EXPERIENCE
     
-    Senior Software Engineer | TechCorp | Jan 2020 - Present
+    Senior Software Engineer | TechCorp | Jan 2023 - Present
     - Led development of microservices using Python, Django, and FastAPI
     - Implemented CI/CD pipelines using Docker and Kubernetes
     - Managed PostgreSQL databases and Redis caching
     
-    Software Engineer | StartupCo | Mar 2018 - Dec 2019
+    Software Engineer | StartupCo | Dec 2018 - Dec 2019
     - Developed React.js frontend applications
     - Built RESTful APIs using Node.js and Express
     - Worked with MongoDB and AWS services
