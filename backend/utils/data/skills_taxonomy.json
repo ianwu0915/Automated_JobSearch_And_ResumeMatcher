@@ -1,0 +1,189 @@
+{
+  "Frontend": {
+    "Frameworks": [
+      { "name": "React", "aliases": ["ReactJS", "React.js"] },
+      { "name": "Vue", "aliases": ["Vue.js", "VueJS"] },
+      { "name": "Angular", "aliases": ["AngularJS", "Angular.js"] },
+      { "name": "Next.js", "aliases": ["NextJS", "Next"] }
+    ],
+    "Languages": [
+      { "name": "JavaScript", "aliases": ["JS", "ECMAScript"] },
+      { "name": "TypeScript", "aliases": ["TS"] },
+      { "name": "HTML", "aliases": ["HTML5"] },
+      { "name": "CSS", "aliases": ["CSS3"] },
+      { "name": "SASS", "aliases": ["SCSS"] }
+    ],
+    "Libraries": [
+      { "name": "jQuery", "aliases": ["JQuery"] },
+      { "name": "Redux", "aliases": ["React Redux"] },
+      { "name": "Bootstrap", "aliases": ["Twitter Bootstrap"] },
+      { "name": "Material UI", "aliases": ["MUI", "MaterialUI"] },
+      { "name": "Three.js", "aliases": ["ThreeJS"] }
+    ],
+    "Build Tools": ["Webpack", "Babel"]
+  },
+  "Backend": {
+    "Languages": [
+      { "name": "Python", "aliases": ["Python3", "Python2"] },
+      { "name": "Java", "aliases": ["Java8", "Java11", "Java17"] },
+      { "name": "C#", "aliases": ["C Sharp"] },
+      { "name": "Ruby", "aliases": ["Ruby on Rails"] },
+      { "name": "PHP", "aliases": ["PHP7", "PHP5"] },
+      { "name": "Go", "aliases": ["Golang"] },
+      { "name": "C++", "aliases": ["CPP", "C Plus Plus"] },
+      { "name": "Scala", "aliases": ["Scala Programming Language"] }
+    ],
+    "Frameworks": [
+      { "name": "Node.js", "aliases": ["NodeJS", "Node"] },
+      { "name": "Express", "aliases": ["Express.js"] },
+      { "name": "Django", "aliases": ["Django REST", "Django Framework"] },
+      { "name": "Flask", "aliases": ["Flask-RESTful"] },
+      { "name": "Spring Boot", "aliases": ["Spring Boot Framework"] },
+      { "name": "FastAPI", "aliases": ["Fast API"] },
+      { "name": "Rails", "aliases": ["Ruby on Rails"] },
+      { "name": "Laravel", "aliases": ["Laravel Framework"] }
+    ]
+  },
+  "Database": {
+    "SQL Databases": [
+      { "name": "SQL", "aliases": ["Structured Query Language"] },
+      { "name": "MySQL", "aliases": ["My SQL"] },
+      { "name": "PostgreSQL", "aliases": ["Postgres"] },
+      { "name": "Oracle", "aliases": ["Oracle Database"] },
+      { "name": "MariaDB", "aliases": ["MariaDB Database"] },
+      { "name": "SQLite", "aliases": ["SQLite3"] }
+    ],
+    "NoSQL Databases": [
+      { "name": "MongoDB", "aliases": ["Mongo"] },
+      { "name": "Redis", "aliases": ["Redis Cache"] },
+      { "name": "DynamoDB", "aliases": ["AWS DynamoDB"] },
+      { "name": "Cassandra", "aliases": ["Cassandra Database"] },
+      { "name": "ElasticSearch", "aliases": ["Elasticsearch"] },
+      { "name": "Neo4j", "aliases": ["Neo4j Graph Database"] },
+      { "name": "Firebase", "aliases": ["Firebase Realtime Database"] }
+    ],
+    "ORM Tools": ["Prisma", "Sequelize"],
+    "Query Languages": ["GraphQL"]
+  },
+  "Cloud & DevOps": {
+    "Cloud Platforms": [
+      { "name": "AWS", "aliases": ["Amazon Web Services", "Amazon AWS"] },
+      { "name": "Azure", "aliases": ["Microsoft Azure"] },
+      { "name": "GCP", "aliases": ["Google Cloud", "Google Cloud Platform"] }
+    ],
+    "Containers & Orchestration": [
+      { "name": "Docker", "aliases": ["Docker Container"] },
+      { "name": "Kubernetes", "aliases": ["K8s"] },
+      { "name": "ECS", "aliases": ["Amazon ECS"] },
+      { "name": "EKS", "aliases": ["Amazon EKS"] },
+      { "name": "GKE", "aliases": ["Google Kubernetes Engine"] },
+      { "name": "AKS", "aliases": ["Azure Kubernetes Service"] }
+    ],
+    "CI/CD": [
+      "Jenkins",
+      "GitLab CI",
+      "GitHub Actions",
+      "CircleCI",
+      "Travis CI",
+      "ArgoCD"
+    ],
+    "Infrastructure as Code": [
+      "Terraform",
+      "Ansible",
+      "CloudFormation",
+      "Pulumi"
+    ],
+    "Monitoring": ["Prometheus", "Grafana"],
+    "Serverless": ["Lambda", "Serverless"],
+    "Storage": ["S3"],
+    "Compute": ["EC2"]
+  },
+  "Testing": {
+    "Unit & Integration Testing": [
+      "Jest",
+      "Mocha",
+      "JUnit",
+      "PyTest",
+      "TestNG"
+    ],
+    "End-to-End Testing": ["Selenium", "Cypress", "Playwright", "WebdriverIO"],
+    "API Testing": ["Postman", "Newman"],
+    "Performance Testing": ["Artillery", "K6", "LoadRunner"]
+  },
+  "Tools & Version Control": {
+    "Version Control": ["Git", "GitHub", "BitBucket"],
+    "Project Management": ["JIRA", "Confluence"],
+    "API Documentation": ["Swagger", "OpenAPI"],
+    "Build Tools": ["Maven", "Gradle"]
+  },
+  "Architecture & Patterns": {
+    "Architectural Patterns": [
+      "Microservices",
+      "REST API",
+      "gRPC",
+      "WebSocket"
+    ],
+    "Security Patterns": ["OAuth", "JWT"],
+    "Design Patterns": [
+      "MVC",
+      "CQRS",
+      "Event Sourcing",
+      "Domain Driven Design"
+    ],
+    "Development Practices": ["TDD", "BDD", "Agile", "Scrum", "Kanban"]
+  },
+  "AI & ML": {
+    "Core Concepts": ["Machine Learning", "AI", "Deep Learning"],
+    "Libraries & Frameworks": [
+      "TensorFlow",
+      "PyTorch",
+      "Scikit-learn",
+      "Pandas",
+      "NumPy",
+      "OpenCV",
+      "Keras",
+      "Hugging Face"
+    ],
+    "Specialized Areas": ["NLP", "Computer Vision"],
+    "Hardware Acceleration": ["CUDA"]
+  },
+  "Mobile": {
+    "Platforms": ["iOS", "Android"],
+    "Frameworks": ["React Native", "Flutter", "SwiftUI", "Xamarin", "Ionic"],
+    "Languages": ["Swift", "Kotlin"]
+  },
+  "System & Infrastructure": {
+    "Operating Systems": ["Linux", "Unix"],
+    "Scripting": ["Bash", "Shell Scripting"],
+    "Message Queues": ["Kafka", "RabbitMQ"],
+    "Web Servers": ["Nginx", "Apache"],
+    "Concepts": [
+      "Distributed Systems",
+      "Cloud",
+      "Backend",
+      "Full Stack",
+      "DevOps",
+      "SRE",
+      "CI/CD"
+    ]
+  },
+  "Security": {
+    "Protocols": ["OAuth2", "SAML", "SSL/TLS"],
+    "Practices": ["Cybersecurity", "Encryption", "Penetration Testing"],
+    "Access Management": ["IAM"],
+    "Web Security": ["WAF"]
+  },
+  "Emerging Tech": {
+    "Blockchain": [
+      "Blockchain",
+      "Web3",
+      "Smart Contracts",
+      "Solidity",
+      "Ethereum",
+      "NFT",
+      "DeFi"
+    ],
+    "AR/VR": ["AR/VR", "WebXR"],
+    "Game Engines": ["Unity", "Unreal Engine"]
+  }
+}
