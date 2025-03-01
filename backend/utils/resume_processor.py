@@ -1,8 +1,8 @@
-from models import ResumeData
-from database import get_db_cursor
+from api.models import ResumeData
+from ..core.database import get_db_cursor
 from utils.ai_helpers import parse_resume_with_ai
 from utils.file_processors import extract_text_from_file
-from utils.redis_service import RedisService
+from ..service.redis_service import RedisService
 import json
 import os
 

@@ -31,7 +31,10 @@
       { "name": "PHP", "aliases": ["PHP7", "PHP5"] },
       { "name": "Go", "aliases": ["Golang"] },
       { "name": "C++", "aliases": ["CPP", "C Plus Plus"] },
-      { "name": "Scala", "aliases": ["Scala Programming Language"] }
+      { "name": "Scala", "aliases": ["Scala Programming Language"] },
+      { "name": "Kotlin", "aliases": ["Kotlin Programming Language"] },
+      { "name": "Swift", "aliases": ["Swift Programming Language"] },
+      { "name": "Rust", "aliases": ["Rust Programming Language"] }
     ],
     "Frameworks": [
       { "name": "Node.js", "aliases": ["NodeJS", "Node"] },
@@ -121,7 +124,10 @@
       "Microservices",
       "REST API",
       "gRPC",
-      "WebSocket"
+      "WebSocket",
+      "GraphQL",
+      "Distributed Systems",
+      "Distributed"
     ],
     "Security Patterns": ["OAuth", "JWT"],
     "Design Patterns": [
