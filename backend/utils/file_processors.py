@@ -7,7 +7,7 @@ from pypdf import PdfReader
 from docx import Document
 import mammoth
 
-from lazy_module import LazyModule
+from backend.utils.lazy_module import LazyModule
 # Lazy imports
 json = LazyModule('json')
 pd = LazyModule('pandas')

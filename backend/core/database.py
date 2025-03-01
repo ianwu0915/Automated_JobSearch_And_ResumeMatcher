@@ -1,7 +1,7 @@
 import psycopg2
 import logging
 from psycopg2.extras import RealDictCursor
-from config import settings
+from backend.core.config import settings
 
 from contextlib import contextmanager
 

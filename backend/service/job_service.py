@@ -202,8 +202,7 @@ class JobService:
                 "listed_date": metadata['listed_time'],
                 "apply_url": self.get_apply_url(details),
                 "description": job_desc,
-                "required_experience_years": job_features["required_experience_years"],
-                "skills": job_features["skills"],
+                "features": job_features,
                 "processed_date": datetime.now().isoformat()
             }
             

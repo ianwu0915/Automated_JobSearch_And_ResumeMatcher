@@ -8,7 +8,7 @@ from typing import List, Dict, Tuple, Any, Optional
 from pathlib import Path 
 import pandas as pd 
 from data_processing.job_data_extraction import process_job_description
-from backend.resume_service.utils.lazy_module import LazyModule 
+from backend.utils.lazy_module import LazyModule
 
 # Lazy imports 
 json = LazyModule("json")

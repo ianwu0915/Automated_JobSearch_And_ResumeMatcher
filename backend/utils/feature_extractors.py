@@ -3,8 +3,8 @@ from collections import Counter
 from datetime import datetime
 from typing import Dict, List, Any, Optional, Set, Tuple, Union
 import logging
-from text_processor import TextProcessor
-from skills_taxonomy import SkillTaxonomy
+from backend.utils.text_processor import TextProcessor
+from backend.utils.skills_taxonomy import SkillTaxonomy
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')

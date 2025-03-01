@@ -16,3 +16,5 @@ httpx==0.26.0
 pytest==8.3.4
 pytest-asyncio==0.25.3
 fakeredis==2.27.0
+scikit-learn==1.6.1
+linkedin-api>=2.0.0

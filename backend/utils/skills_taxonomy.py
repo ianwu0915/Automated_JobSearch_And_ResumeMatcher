@@ -5,7 +5,7 @@ from pathlib import Path
 class SkillTaxonomy:
     def __init__(self):
         # Load skills taxonomy
-        taxonomy_path = Path('data/skills_taxonomy.json')
+        taxonomy_path = Path('backend/utils/data/skills_taxonomy.json')
         with open(taxonomy_path, 'r') as f:
             self.taxonomy = json.load(f)
             
