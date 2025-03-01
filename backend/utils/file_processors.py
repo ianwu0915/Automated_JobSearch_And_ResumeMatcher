@@ -7,7 +7,7 @@ from pypdf import PdfReader
 from docx import Document
 import mammoth
 
-from utils.lazy_module import LazyModule
+from resume_service.utils.lazy_module import LazyModule
 # Lazy imports
 json = LazyModule('json')
 pd = LazyModule('pandas')
@@ -52,6 +52,7 @@ async def extract_text_from_file(file_path: str, file_type: str) -> str:
     except Exception as e:
         print(f"Error extracting text: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to extract text: {str(e)}")
+
 
 class ExcelFileHandler:
     @staticmethod
