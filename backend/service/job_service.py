@@ -48,7 +48,7 @@ class JobService:
             )
 
     async def search_jobs(self, search_params: Dict) -> List[Dict]:
-        """Search for jobs with given parameters"""
+        """Search for jobs with given parameters and process them"""
         try:
             # Create a wrapper function to handle keyword arguments
             def search_wrapper():

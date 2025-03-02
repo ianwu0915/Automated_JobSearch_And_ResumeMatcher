@@ -5,8 +5,6 @@ import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 import mimetypes
 from pathlib import Path
-
-from backend.service.feature_service import FeatureService
 from backend.service.resume_service import ResumeService
 from backend.service.job_service import JobService
 
@@ -196,7 +194,6 @@ class MatchingService:
         
         # Get matched and missing skills
         resume_skills = set(s.lower() for s in resume_features.get("skills", []))
-        print("resume_skills", resume_skills)
         job_skills = set(s.lower() for s in job_features.get("skills", []))
         
         matched_skills = resume_skills.intersection(job_skills)
@@ -225,7 +222,7 @@ async def main():
     
     # Example resume and job IDs
     resume_path = "tests/sample_data/resume1.pdf"
-    jobs = await job_service.search_jobs_parallel([{"keywords": "Software Engineer", "location_name": "United States", "remote": ["2"], "experience": ["2", "3"], "job_type": ["F", "C"], "limit": 10}])
+    jobs = await job_service.search_jobs_parallel([{"keywords": "Software Engineer", "location_name": "United States", "remote": ["2"], "experience": ["2", "3"], "job_type": ["F", "C"], "limit": 50}])
     
     # Get matches
     matches = await matching_service.match_resume_to_jobs(resume_path, jobs)
