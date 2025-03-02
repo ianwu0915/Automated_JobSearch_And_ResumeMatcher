@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from backend.service.redis_service import RedisClient
 from backend.repository.jobRepository import JobRepository
 from backend.utils.feature_extractors import FeatureExtractor
+from backend.core.database import initialize_database
 from concurrent.futures import ThreadPoolExecutor
 
 import asyncio
@@ -118,7 +119,7 @@ class JobService:
         """Generate Redis key with prefix"""
         return f"{JOB_KEY_PREFIX}{job_id}"
 
-    async def is_job_processed(self, job_id: str) -> bool:
+    def is_job_processed(self, job_id: str) -> bool:
         """Check if job has been processed and cached"""
         try:
             exists = self.redis_client.exists(self._get_cache_key(job_id))
@@ -127,10 +128,15 @@ class JobService:
             print(f"Error checking if job is processed: {e}")
             return False
 
-    async def cache_job(self, job_id: str, job_details: Dict):
+    def cache_job(self, job_id: str, job_details: Dict):
         """Cache job details"""
         try:
-            serialized_data = json.dumps(job_details)
+            # Only serialize if not already a string
+            if isinstance(job_details, dict):
+                serialized_data = json.dumps(job_details)
+            else:
+                serialized_data = job_details
+                
             self.redis_client.set(
                 self._get_cache_key(job_id),
                 serialized_data,
@@ -139,13 +145,20 @@ class JobService:
         except Exception as e:
             print(f"Error caching job {job_id}: {e}")
 
-    async def get_cached_job(self, job_id: str) -> Optional[Dict]:        
+    def get_cached_job(self, job_id: str) -> Optional[Dict]:        
         """Get cached job details"""
         try:
             cached_data = self.redis_client.get(self._get_cache_key(job_id))
             if cached_data:
-                # Deserialize JSON string back to dictionary
-                return json.loads(cached_data.decode('utf-8'))
+                if isinstance(cached_data, bytes):
+                    # If it's bytes, decode and parse JSON
+                    return json.loads(cached_data.decode('utf-8'))
+                elif isinstance(cached_data, str):
+                    # If it's string, parse JSON
+                    return json.loads(cached_data)
+                elif isinstance(cached_data, dict):
+                    # If it's already a dict, return as is
+                    return cached_data
             return None
         except Exception as e:
             print(f"Error retrieving cached job {job_id}: {e}")
@@ -205,8 +218,8 @@ class JobService:
             job_id = job["entityUrn"].split(":")[-1]
             
             # Check cache first
-            if await self.is_job_processed(job_id):
-                cached_job = await self.get_cached_job(job_id)
+            if self.is_job_processed(job_id):
+                cached_job = self.get_cached_job(job_id)
                 if cached_job:
                     return cached_job
             
@@ -246,7 +259,7 @@ class JobService:
             }
             
             # Cache the result
-            await self.cache_job(job_id, job_result)
+            self.cache_job(job_id, job_result)
             
             # Save to database
             await self.job_repo.save_job(job_result)
@@ -303,3 +316,46 @@ class JobService:
             return job_data["job_id"]
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error saving job: {str(e)}")
+
+# Example usage
+async def main():
+    initialize_database()
+    job_service = JobService()
+    search_params_list = [
+        {
+            "keywords": "Software Engineer",
+            "location_name": "United States",
+            "remote": ["2"],
+            "experience": ["2", "3"],
+            "job_type": ["F", "C"],
+            "limit": 10,
+        },
+        {
+            "keywords": "Software Developer",
+            "location_name": "United States",
+            "experience": ["2", "3"],
+            "job_type": ["F", "C"],
+            "limit": 10,
+        },
+        {
+            "keywords": "Backend",
+            "location_name": "United States",
+            "experience": ["2", "3"],
+            "job_type": ["F", "C"],
+            "limit": 10,
+        }
+    ]
+    
+    jobs = await job_service.search_jobs_parallel(search_params_list)
+  
+    
+    for job in jobs:
+        success = await job_service.save_job(job)
+        if success:
+            print(f"Job saved: {success}")
+        else:
+            print(f"Failed to save job: {success}")
+    
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(main())

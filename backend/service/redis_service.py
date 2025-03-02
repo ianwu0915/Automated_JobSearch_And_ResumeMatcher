@@ -9,23 +9,48 @@ import json
 redis = LazyModule("redis")
 from datetime import timedelta
 
+import json
+import redis
+
 class RedisClient:
     def __init__(self, host='localhost', port=6379, db=0):
         # db 0 is default for redis among 16 other logical databases
         self.client = redis.Redis(host=host, port=port, db=db)
 
     def get(self, key):
+        """Get value from Redis and deserialize if it's JSON"""
         data = self.client.get(key)
-        return json.loads(data) if data else None
+        if data:
+            # Check if it's bytes and decode it first
+            if isinstance(data, bytes):
+                try:
+                    return json.loads(data.decode('utf-8'))
+                except json.JSONDecodeError:
+                    return data.decode('utf-8')
+            return data
+        return None
     
     def set(self, key, value, ex=None):
-        self.client.set(name=key, value=json.dumps(value), nx=True, ex=ex)
+        """Set value in Redis with optional expiry, serializing if needed"""
+        # Serialize value if it's a dict or list
+        if isinstance(value, (dict, list)):
+            value = json.dumps(value)
+        self.client.set(name=key, value=value, ex=ex)
     
     def exists(self, key):
+        """Check if key exists in Redis"""
         return self.client.exists(key) > 0
     
     def delete(self, key):
-        self.client.delete(key)           
+        """Delete key from Redis"""
+        self.client.delete(key)      
+    
+    def generate_cache_key(self, prefix, identifier):
+        """
+        Generate a consistent cache key with a prefix and identifier.
+        """
+        return f"{prefix}:{identifier}"
+
 
 # class RedisService:
 #     def __init__(self):

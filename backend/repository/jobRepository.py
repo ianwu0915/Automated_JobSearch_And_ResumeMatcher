@@ -1,23 +1,24 @@
 import json
 import logging
+import os
 from datetime import datetime, timedelta
 from typing import Optional, Dict, List
-
+from dotenv import load_dotenv
 from backend.core.database import (
     execute_query, 
     execute_with_commit, 
-    cache_get, 
-    cache_set, 
-    cache_delete,
-    generate_cache_key,
 )
 
+from backend.service.redis_service import RedisClient
+
+load_dotenv()
 logger = logging.getLogger(__name__)
+redis_client = RedisClient()
 
 class JobRepository:
     """Repository for job data operations with caching"""
     
-    CACHE_PREFIX = "job"
+    CACHE_PREFIX = os.getenv('JOB_KEY_PREFIX', 'job:')
     CACHE_EXPIRY = 86400  # 24 hours (jobs are less frequently updated)
     
     @classmethod
@@ -44,18 +45,11 @@ class JobRepository:
                 INSERT INTO jobs (
                     job_id, title, company, location, workplace_type,
                     listed_time, apply_url, description, features, processed_date
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ON CONFLICT (job_id) 
                 DO UPDATE SET
-                    title = $2,
-                    company = $3,
-                    location = $4,
-                    workplace_type = $5,
-                    listed_time = $6,
-                    apply_url = $7,
-                    description = $8,
-                    features = $9,
-                    processed_date = $10
+                    features = EXCLUDED.features,
+                    processed_date = EXCLUDED.processed_date
                 RETURNING job_id
             """
             
@@ -79,8 +73,8 @@ class JobRepository:
             
             if result:
                 # Update cache
-                cache_key = generate_cache_key(cls.CACHE_PREFIX, job_data['job_id'])
-                await cache_set(cache_key, job_data, cls.CACHE_EXPIRY)
+                cache_key = redis_client.generate_cache_key(cls.CACHE_PREFIX, job_data['job_id'])
+                redis_client.set(cache_key, job_data, cls.CACHE_EXPIRY)
             
             return result is not None
         
