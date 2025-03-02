@@ -69,6 +69,33 @@ class ResumeRepository:
             return False
     
     @classmethod
+    def get_resume_by_userid(cls, user_id):
+        """Get resume by user ID"""
+        try:
+            query = "SELECT * FROM user_resumes WHERE user_id = %s"
+            result = execute_query(query, (user_id,), fetch_one=True)
+            
+            if result:
+                # Convert database row to dictionary
+                resume_dict = dict(result)
+                
+                # Parse JSON fields if they exist
+                for field in ['features', 'raw_text', 'created_at']:
+                    if resume_dict.get(field) and isinstance(resume_dict[field], str):
+                        try:
+                            resume_dict[field] = json.loads(resume_dict[field])
+                        except json.JSONDecodeError:
+                            pass  # Keep as string if not valid JSON
+                
+                return resume_dict
+            
+            return None
+        
+        except Exception as e:
+            logger.error(f"Error getting resume by user ID: {str(e)}")
+            return None
+    
+    @classmethod
     def get_resume_by_id(cls, resume_id):
         """
         Get resume data by ID, with caching.
@@ -92,18 +119,18 @@ class ResumeRepository:
             result = execute_query(query, (resume_id,), fetch_one=True)
             
             if result:
-                # Process data
-                resume_data = dict(result)
+                # Convert database row to dictionary
+                resume_dict = dict(result)
                 
-                # Parse JSON fields
-                for field in ['skills', 'education', 'word_frequencies']:
-                    if resume_data.get(field) and isinstance(resume_data[field], str):
-                        resume_data[field] = json.loads(resume_data[field])
+                # Parse JSON fields if they exist
+                for field in ['features', 'raw_text', 'created_at']:
+                    if resume_dict.get(field) and isinstance(resume_dict[field], str):
+                        try:
+                            resume_dict[field] = json.loads(resume_dict[field])
+                        except json.JSONDecodeError:
+                            pass  # Keep as string if not valid JSON
                 
-                # Update cache
-                cache_set(cache_key, resume_data, cls.CACHE_EXPIRY)
-                
-                return resume_data
+                return resume_dict
             
             return None
         

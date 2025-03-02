@@ -1,30 +1,53 @@
-from typing import Dict, Set, List, Any, Union, BinaryIO
-from datetime import datetime
+from typing import Dict, List, Any
 from fastapi import HTTPException
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
-import mimetypes
-from pathlib import Path
 from backend.service.resume_service import ResumeService
 from backend.service.job_service import JobService
+from backend.repository.matchRepository import MatchRepository
 
 class MatchingService:
     def __init__(self, resume_service: ResumeService, job_service: JobService):
         self.resume_service = resume_service
         self.job_service = job_service
+        self.match_repo = MatchRepository()
     
-    async def match_resume_to_jobs(self, resume_path: str, jobs: List[Dict], user_id: str = "default_user") -> List[Dict[str, Any]]:
+    async def store_match_results(self, matches: List[Dict]):
+        """Store match results in the database"""
+        try:
+            for match in matches:
+                # Add user_id to match data
+                match_data = {
+                    "resume_id": match["resume_id"],
+                    "job_id": match["job_id"],
+                    "match_score": match["match_score"],
+                    "matched_skills": match["matched_skills"],
+                    "missing_skills": match["missing_skills"],
+                    "required_experience_years": match["required_experience_years"],
+                    "resume_experience_years": match["resume_experience_years"]
+                }
+                success = await self.match_repo.save_match_result(match_data)
+                if not success:
+                    raise Exception(f"Failed to save match result for job {match['job_id']}")
+                    
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error storing match results: {str(e)}")
+    
+    async def get_job_and_matches_for_resume(self, resume_id: str, limit: int = 20, min_score: float = 50.0):
+        """Get stored matches for a resume"""
+        try:
+            matches = await self.match_repo.get_job_and_matches_by_resume_id(resume_id, limit, min_score)
+            return matches
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error getting matches: {str(e)}")
+    
+    async def match_resume_to_jobs(self, jobs: List[Dict], user_id: str = "1") -> List[Dict[str, Any]]:
         """Match a resume against multiple jobs and return ranked matches"""
         try:
-            # Get file type from extension
-            file_type = mimetypes.guess_type(resume_path)[0]
-            if not file_type:
-                raise HTTPException(status_code=400, detail="Could not determine file type")
-            
-            # Process resume using the file path directly
-            resume = await self.resume_service.process_resume_file(resume_path, user_id, file_type)
+            # Get resume by current user ID
+            resume = await self.resume_service.get_resume_by_user_id(user_id)
             if not resume:
-                raise HTTPException(status_code=404, detail=f"Resume {resume_path} not found")
+                raise HTTPException(status_code=404, detail="Resume not found")
             
             # Calculate match scores for each job
             matches = []
@@ -52,9 +75,14 @@ class MatchingService:
             match_details = self._get_match_details(resume, job)
             
             return {
-                **job,  # Include all job details
+                "resume_id": resume["resume_id"],
+                "job_id": job["job_id"],
                 "match_score": match_score,
-                "match_details": match_details
+                "matched_skills": match_details["matched_skills"],
+                "missing_skills": match_details["missing_skills"],
+                "required_experience_years": match_details["experience_years"]["required"],
+                "resume_experience_years": match_details["experience_years"]["resume"],
+
             }
             
         except Exception as e:
@@ -207,6 +235,7 @@ class MatchingService:
                 "required": job_features.get("required_experience_years", 0)
             }
         }
+    
 
 # Example usage
 async def main():

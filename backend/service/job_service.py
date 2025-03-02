@@ -1,19 +1,17 @@
 import os
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from datetime import datetime
 from fastapi import HTTPException
 from redis import Redis
 from linkedin_api import Linkedin
 from dotenv import load_dotenv
-from backend.service.feature_service import FeatureService
 from backend.service.redis_service import RedisClient
+from backend.repository.jobRepository import JobRepository
+from backend.utils.feature_extractors import FeatureExtractor
 from concurrent.futures import ThreadPoolExecutor
-from pathlib import Path
-import pandas as pd
-import time
-from backend.utils.file_processors import ExcelFileHandler
+
 import asyncio
-import json  # Add this import at the top
+import json
 
 # Load environment variables
 load_dotenv()
@@ -35,9 +33,10 @@ BLACK_LIST: List[str] = os.getenv('BLACK_LIST', '[]').strip('[]').split(',')
 BLACK_LIST = [company.strip().strip('"\'') for company in BLACK_LIST if company.strip()]
 
 class JobService:
-    def __init__(self, feature_service: FeatureService, redis_client: Redis):
-        self.feature_service = feature_service
-        self.redis_client = redis_client
+    def __init__(self, redis_client=None):
+        self.job_repo = JobRepository()
+        self.feature_extractor = FeatureExtractor()
+        self.redis_client = redis_client or RedisClient()
         self.executor = ThreadPoolExecutor(max_workers=MAX_SEARCH_WORKERS)
         try:
             self.linkedin_api = Linkedin(LINKEDIN_USERNAME, LINKEDIN_PASSWORD)
@@ -46,7 +45,22 @@ class JobService:
                 status_code=500,
                 detail=f"Failed to initialize LinkedIn API: {str(e)}"
             )
-
+            
+    def extract_job_features(self, text: str) -> Dict[str, Any]:
+        """Extract features from job description"""
+        try:
+            features = self.feature_extractor.extract_job_features(text)
+            return {
+                "required_experience_years": features["required_experience_years"],
+                "skills": features["skills"],
+                "word_frequencies": dict(list(features["word_frequencies"].items())[:100])
+            }
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error extracting job features: {str(e)}"
+            ) 
+            
     async def search_jobs(self, search_params: Dict) -> List[Dict]:
         """Search for jobs with given parameters and process them"""
         try:
@@ -88,7 +102,7 @@ class JobService:
             
             for job_list in results:
                 for job in job_list:
-                    if job['job_id'] not in seen_jobs:
+                    if job and job.get('job_id') and job['job_id'] not in seen_jobs:
                         seen_jobs.add(job['job_id'])
                         unique_jobs.append(job)
             
@@ -104,9 +118,14 @@ class JobService:
         """Generate Redis key with prefix"""
         return f"{JOB_KEY_PREFIX}{job_id}"
 
-    def is_job_processed(self, job_id: str) -> bool:
+    async def is_job_processed(self, job_id: str) -> bool:
         """Check if job has been processed and cached"""
-        return self.redis_client.exists(self._get_cache_key(job_id))
+        try:
+            exists = await self.redis_client.exists(self._get_cache_key(job_id))
+            return exists
+        except Exception as e:
+            print(f"Error checking if job is processed: {e}")
+            return False
 
     async def cache_job(self, job_id: str, job_details: Dict):
         """Cache job details"""
@@ -114,18 +133,18 @@ class JobService:
             # Serialize the dictionary to JSON string
             serialized_data = json.dumps(job_details)
             
-            self.redis_client.set(
-                name=self._get_cache_key(job_id),
+            await self.redis_client.set(
+                key=self._get_cache_key(job_id),
                 value=serialized_data,
                 ex=JOB_CACHE_EXPIRY
             )
         except Exception as e:
             print(f"Error caching job {job_id}: {e}")
 
-    def get_cached_job(self, job_id: str) -> Dict:
+    async def get_cached_job(self, job_id: str) -> Optional[Dict]:        
         """Get cached job details"""
         try:
-            cached_data = self.redis_client.get(self._get_cache_key(job_id))
+            cached_data = await self.redis_client.get(self._get_cache_key(job_id))
             if cached_data:
                 # Deserialize JSON string back to dictionary
                 return json.loads(cached_data)
@@ -156,7 +175,10 @@ class JobService:
     def format_listed_time(self, listed_time: str) -> str:
         """Convert Unix timestamp to readable date"""
         if listed_time != 'N/A':
-            return datetime.fromtimestamp(int(listed_time)/1000).strftime('%Y-%m-%d %H:%M')
+            try:
+                return datetime.fromtimestamp(int(listed_time)/1000).strftime('%Y-%m-%d %H:%M')
+            except (ValueError, TypeError):
+                return 'N/A'
         return listed_time
 
     def get_apply_url(self, details: Dict) -> str:
@@ -167,19 +189,30 @@ class JobService:
             .get('com.linkedin.voyager.jobs.ComplexOnsiteApply', {}))
         return apply_method.get('companyApplyUrl', 'N/A')
 
-    async def process_job(self, job: Dict) -> Dict:
+    async def process_job(self, job: Dict) -> Optional[Dict]:
         """Process a single job posting"""
         try:
+            # Safely extract job_id
+            if not job.get("entityUrn"):
+                return None
+                
             job_id = job["entityUrn"].split(":")[-1]
             
             # Check cache first
-            if self.is_job_processed(job_id):
-                cached_job = self.get_cached_job(job_id)
+            if await self.is_job_processed(job_id):
+                cached_job = await self.get_cached_job(job_id)
                 if cached_job:
                     return cached_job
             
+            # Check database
+            db_job = await self.job_repo.get_job_by_id(job_id)
+            if db_job:
+                return db_job
+            
             # Get full job details
             details = self.linkedin_api.get_job(job_id)
+            if not details:
+                return None
             
             # Extract metadata
             metadata = self.extract_metadata(details)
@@ -190,7 +223,7 @@ class JobService:
             
             # Get job description and process it
             job_desc = details.get('description', {}).get('text', '')
-            job_features = self.feature_service.extract_job_features(job_desc)
+            job_features = self.extract_job_features(job_desc)
             
             # Prepare final result
             job_result = {
@@ -209,49 +242,44 @@ class JobService:
             # Cache the result
             await self.cache_job(job_id, job_result)
             
+            # Save to database
+            await self.job_repo.save_job(job_result)
+            
             return job_result
             
         except Exception as e:
             print(f"Error processing job: {e}")
-            return None
+            return None 
 
-    def process_jobs_in_batch(self, jobs, batch_size=45):
-        """Process jobs in batches to better manage resources"""
-        with ThreadPoolExecutor(max_workers=MAX_PROCESS_WORKERS) as executor:
-            futures = []
-            for i in range(0, len(jobs), batch_size):
-                batch = jobs[i:i+batch_size]
-                futures.extend([executor.submit(self.process_job, job) for job in batch])
-                
-            result = []
-            for future in futures:
-                try:
-                    job_result = future.result()
-                    if job_result is not None:
-                        result.append(job_result)
-                except Exception as e:
-                    print(f"Error processing job: {e}")
-                    
-        return result
-    
     async def get_job_by_id(self, job_id: str) -> Dict:
         """Get job details by ID"""
         try:
             # Check cache first
-            cached_job = self.get_cached_job(job_id)
+            cached_job = await self.get_cached_job(job_id)
             if cached_job:
                 return cached_job
             
-            # Get from LinkedIn API
-            job_details = self.linkedin_api.get_job(job_id)
-            if not job_details:
+            # Check database 
+            db_job = await self.job_repo.get_job_by_id(job_id)
+            if db_job:
+                return db_job
+                
+            # If not found, fetch from LinkedIn API
+            details = self.linkedin_api.get_job(job_id)
+            if not details:
                 raise HTTPException(
                     status_code=404,
                     detail=f"Job not found: {job_id}"
                 )
-            
-            # Process and cache the job
+                
+            # Process and return the job
             job_result = await self.process_job({"entityUrn": f"urn:li:fs_normalized_jobPosting:{job_id}"})
+            if not job_result:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Failed to process job: {job_id}"
+                )
+                
             return job_result
             
         except Exception as e:
@@ -259,51 +287,13 @@ class JobService:
                 status_code=500,
                 detail=f"Error getting job details: {str(e)}"
             )
-
-# Example usage
-async def main():
-    from redis import Redis
-    from datetime import datetime, timedelta
     
-    # Initialize services
-    redis_client = Redis(host='localhost', port=6379, db=0)
-    feature_service = FeatureService()
-    job_service = JobService(feature_service, redis_client)
-    
-    # Search parameters
-    search_params_list = [
-        {
-            "keywords": "Software Engineer",
-            "location_name": "United States",
-            "remote": ["2"],
-            "experience": ["2", "3"],
-            "job_type": ["F", "C"],
-            "limit": 3,
-        },
-        {
-            "keywords": "Software Developer",
-            "location_name": "United States",
-            "experience": ["2", "3"],
-            "job_type": ["F", "C"],
-            "limit": 1,
-        },
-        {
-            "keywords": "Backend",
-            "location_name": "United States",
-            "experience": ["2", "3"],
-            "job_type": ["F", "C"],
-            "limit": 1,
-        }
-    ]
-    
-    print(f"Starting job search at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    
-    # Run parallel search
-    jobs = await job_service.search_jobs_parallel(search_params_list)
-    
-    print(f"Found {len(jobs)} unique jobs")
-    for job in jobs:
-        print(f"- {job['title']} at {job['company']}")
-
-if __name__ == "__main__":
-    asyncio.run(main())
+    async def save_job(self, job_data: dict) -> str:
+        """Save job to database"""
+        try:
+            success = await self.job_repo.save_job(job_data)
+            if not success:
+                raise Exception(f"Failed to save job {job_data.get('job_id')}")
+            return job_data["job_id"]
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error saving job: {str(e)}")

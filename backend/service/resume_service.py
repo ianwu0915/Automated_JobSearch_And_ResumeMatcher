@@ -6,15 +6,31 @@ import aiofiles
 from datetime import datetime
 from pathlib import Path
 import mimetypes 
-from typing import Union, BinaryIO
-
+from backend.repository.resumeRepository import ResumeRepository
+from backend.utils.feature_extractors import FeatureExtractor
+from typing import Dict, Any
 from ..utils.file_processors import extract_text_from_file, SUPPORTED_MIME_TYPES
-from .feature_service import FeatureService
 
 class ResumeService:
-    def __init__(self, feature_service: FeatureService):
-        self.feature_service = feature_service
+    def __init__(self):
+        self.feature_extractor = FeatureExtractor()
         self.supported_mime_types = SUPPORTED_MIME_TYPES
+        self.resume_repo = ResumeRepository()
+        
+    def extract_resume_features(self, text: str) -> Dict[str, Any]:
+        """Extract features from resume text"""
+        try:
+            features = self.feature_extractor.extract_resume_features(text)
+            return {
+                "work_experience_years": features["work_experience_years"],
+                "skills": features["skills"],
+                "word_frequencies": dict(list(features["word_frequencies"].items())[:100])
+            }
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error extracting resume features: {str(e)}"
+            )
 
     async def process_resume_file(self, file_path: str, user_id: str, content_type: str = None):
         """
@@ -49,8 +65,8 @@ class ResumeService:
             # Extract text from file
             resume_text = await extract_text_from_file(file_path, file_type)
             
-            # Extract features using FeatureService
-            features = self.feature_service.extract_resume_features(resume_text)
+            # Extract features
+            features = self.extract_resume_features(resume_text)
             
             # Create result object
             result = {
@@ -62,6 +78,23 @@ class ResumeService:
             }
             
             return result
+        
         except Exception as e:
             print(f"Error processing resume: {str(e)}")
             raise e
+
+    async def get_resume_by_user_id(self, user_id: str):
+        """Get resume by ID"""
+        try:
+            resume = await self.resume_repo.get_resume_by_userid(user_id)
+            return resume
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error getting resume: {str(e)}")
+    
+    async def save_resume(self, resume_data: dict):
+        """Save resume to database"""
+        try:
+            await self.resume_repo.save_resume(resume_data)
+            return resume_data["resume_id"]
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error saving resume: {str(e)}")

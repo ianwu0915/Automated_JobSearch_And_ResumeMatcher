@@ -1,35 +1,21 @@
-from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, BackgroundTasks, Query
-from typing import Dict, Any, List, Optional
-import uuid
+from fastapi import APIRouter, HTTPException, File, UploadFile, Query
+from typing import List
 import os
-import tempfile
-import aiofiles
-from datetime import datetime, timedelta
 
-from backend.core.database import get_db_cursor, redis_client, execute_query, execute_with_commit
-from backend.utils.file_processors import SUPPORTED_MIME_TYPES
-from backend.service.resume_service import process_resume_background, ResumeService
-from backend.service.redis_service import RedisService
+from backend.core.database import get_db_cursor, redis_client
+from backend.service.resume_service import ResumeService
 from backend.service.job_service import JobService
 from backend.service.matching_service import MatchingService
-from backend.service.feature_service import FeatureService
 from backend.repository.resumeRepository import ResumeRepository
 from backend.repository.jobRepository import JobRepository
 from backend.repository.matchRepository import MatchRepository
 
 router = APIRouter(prefix="/api", tags=["resumes"])
-redis_service = RedisService()
 
 # Service instances
-feature_service = FeatureService()
-resume_service = ResumeService(feature_service)
-job_service = JobService(feature_service, redis_client)
+resume_service = ResumeService()
+job_service = JobService(redis_client)
 matching_service = MatchingService(resume_service, job_service)
-
-# Repository instances
-resume_repo = ResumeRepository()
-job_repo = JobRepository()
-match_repo = MatchRepository()
 
 @router.get("/")
 async def hello_world():
@@ -68,9 +54,9 @@ async def upload_resume(
             # - years_of_experience: int
             # - word_frequency: list of word_frequencies
     
-            
+
             # Store database and redis cache
-            resume_id = await resume_repo.save_resume(resume_data)
+            resume_id = await resume_service.save_resume(resume_data)
             
             return {
                 "message": "Resume uploaded and processed successfully",
@@ -91,35 +77,11 @@ async def upload_resume(
         
 @router.get("/resumes/{resume_id}")
 async def get_resume(resume_id: str):
-    with get_db_cursor() as cursor:
-        cursor.execute(
-            """
-            SELECT user_id, resume_id, skills, experience, education, 
-                   projects, raw_text, created_at 
-            FROM user_resumes 
-            WHERE resume_id = %s
-            """,
-            (resume_id,)
-        )
-        result = cursor.fetchone()
-        
-        if not result:
-            raise HTTPException(status_code=404, detail="Resume not found")
-        
-        # Convert the RealDictRow to a regular dict and handle JSON fields
-        return {
-            "user_id": result["user_id"],
-            "resume_id": result["resume_id"],
-            "skills": result["skills"],  # PostgreSQL should handle JSON conversion
-            "experience": result["experience"],
-            "education": result["education"],
-            "projects": result["projects"],
-            "raw_text": result["raw_text"],
-            "created_at": result["created_at"].isoformat() if result["created_at"] else None
-        }
+    resume = await resume_service.get_resume_by_user_id(resume_id)
+    return resume
 
-@router.get("/jobs/search")
-async def search_jobs(
+@router.get("/jobs/search_and_match")
+async def search_jobs_and_match(
     keywords: str = Query(..., description="Job search keywords"),
     location: str = Query("United States", description="Location for job search"),
     experience_level: List[str] = Query(["2", "3"], description="Experience level codes"),
@@ -134,7 +96,7 @@ async def search_jobs(
     """
     try:
         # Get user's most recent resume
-        resume = await resume_repo.get_latest_resume(user_id)
+        resume = await resume_service.get_resume_by_user_id(user_id)
         if not resume:
             raise HTTPException(
                 status_code=404,
@@ -157,27 +119,21 @@ async def search_jobs(
         # Store jobs in database and cache if not already present
         for job in jobs:
             # Check if job exists in cache or database
-            cached_job = await job_repo.get_job(job["job_id"])
+            cached_job = await job_service.get_job_by_id(job["job_id"])
             if not cached_job:
-                await job_repo.save_job(job)
+                await job_service.save_job(job)
         
-        resume = 
+        resume = await resume_service.get_resume_by_user_id(user_id)
         
         # Match jobs with resume
-        matches = await matching_service.match_resume_to_jobs(
-            resume["resume_path"],  # Assuming resume path is stored
+        matches = await matching_service.match_resume_to_jobs(  
+            # Assuming resume path is stored
             jobs,
             user_id
         )
         
         # Store match results
-        for match in matches:
-            await match_repo.save_match_result({
-                "resume_id": resume["resume_id"],
-                "job_id": match["job_id"],
-                "overall_match": match["match_score"],
-                "match_details": match["match_details"]
-            })
+        await matching_service.store_match_results(matches, user_id)
         
         return {
             "message": "Jobs found and matched successfully",
@@ -198,12 +154,12 @@ async def get_job(job_id: str):
     """
     try:
         # Try to get from cache/database
-        job = await job_repo.get_job(job_id)
+        job = await job_service.get_job_by_id(job_id)
         if not job:
             # If not found, fetch from LinkedIn
             job = await job_service.get_job_by_id(job_id)
             if job:
-                await job_repo.save_job(job)
+                await job_service.save_job(job)
         
         return job
         
@@ -222,7 +178,7 @@ async def get_match_history(
     Get historical match results for a user.
     """
     try:
-        matches = await match_repo.get_user_matches(user_id, limit)
+        matches = await matching_service.get_job_and_matches_for_resume(user_id, limit)
         return {
             "user_id": user_id,
             "total_matches": len(matches),

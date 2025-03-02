@@ -1,6 +1,7 @@
 import json
 import logging
 from datetime import datetime, timedelta
+from typing import Optional, Dict, List
 
 from backend.core.database import (
     execute_query, 
@@ -20,7 +21,7 @@ class JobRepository:
     CACHE_EXPIRY = 86400  # 24 hours (jobs are less frequently updated)
     
     @classmethod
-    def save_job(cls, job_data):
+    async def save_job(cls, job_data: Dict) -> bool:
         """
         Save job data to database and cache.
         
@@ -31,12 +32,9 @@ class JobRepository:
                 - company: Company name
                 - location: Job location
                 - description: Job description
-                - required_skills: List of required skills
-                - required_experience: Experience requirement
-                - required_education: Education requirement
-                - word_frequencies: Word frequency dictionary
+                - features: Job features including skills, experience requirements
                 - apply_url: URL to apply
-                - listed_time: When the job was listed
+                - listed_date: When the job was listed
                 
         Returns:
             bool: True if save was successful, False otherwise
@@ -45,52 +43,45 @@ class JobRepository:
             # Insert or update in database
             query = """
             INSERT INTO jobs 
-                (job_id, title, company, location, workplace_type, description, 
-                required_skills, required_experience, required_education, 
-                word_frequencies, apply_url, listed_time, created_at, updated_at) 
+                (job_id, title, company, location, workplace_type, listed_date, apply_url, description, features, processed_date,
+                created_at) 
             VALUES 
-                (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (job_id) 
             DO UPDATE SET
                 title = EXCLUDED.title,
                 company = EXCLUDED.company,
                 location = EXCLUDED.location,
                 workplace_type = EXCLUDED.workplace_type,
-                description = EXCLUDED.description,
-                required_skills = EXCLUDED.required_skills,
-                required_experience = EXCLUDED.required_experience,
-                required_education = EXCLUDED.required_education,
-                word_frequencies = EXCLUDED.word_frequencies,
+                listed_date = EXCLUDED.listed_date,
                 apply_url = EXCLUDED.apply_url,
-                listed_time = EXCLUDED.listed_time,
-                updated_at = EXCLUDED.updated_at
+                description = EXCLUDED.description,
+                features = EXCLUDED.features,
+                processed_date = EXCLUDED.processed_date
             """
-            
+
             now = datetime.now()
             
             params = (
                 job_data['job_id'],
                 job_data['title'],
                 job_data['company'],
-                job_data.get('location'),
-                job_data.get('workplace_type'),
+                job_data['location'],
+                job_data.get('workplace_type', 'N/A'),
+                job_data.get('listed_date', 'N/A'),
+                job_data.get('apply_url', 'N/A'),
                 job_data.get('description', ''),
-                json.dumps(job_data.get('required_skills', [])),
-                job_data.get('required_experience'),
-                json.dumps(job_data.get('required_education', {})),
-                json.dumps(job_data.get('word_frequencies', {})),
-                job_data.get('apply_url'),
-                job_data.get('listed_time'),
-                now,
+                json.dumps(job_data.get('features', {})),
+                job_data.get('processed_date', now.isoformat()),
                 now
             )
             
-            success = execute_with_commit(query, params)
+            success = await execute_with_commit(query, params)
             
             if success:
                 # Update cache
                 cache_key = generate_cache_key(cls.CACHE_PREFIX, job_data['job_id'])
-                cache_set(cache_key, job_data, cls.CACHE_EXPIRY)
+                await cache_set(cache_key, job_data, cls.CACHE_EXPIRY)
             
             return success
         
@@ -99,50 +90,38 @@ class JobRepository:
             return False
     
     @classmethod
-    def get_job_by_id(cls, job_id):
-        """
-        Get job data by ID, with caching.
-        
-        Args:
-            job_id: The unique identifier of the job
-            
-        Returns:
-            dict: Job data or None if not found
-        """
+    async def get_job_by_id(cls, job_id: str) -> Optional[Dict]:
+        """Get job by ID"""
         try:
-            # Check cache first
+            # Try cache first
             cache_key = generate_cache_key(cls.CACHE_PREFIX, job_id)
-            cached_data = cache_get(cache_key)
-            
-            if cached_data:
-                return cached_data
-            
+            cached_job = await cache_get(cache_key)
+            if cached_job:
+                return cached_job
+                
             # If not in cache, get from database
             query = "SELECT * FROM jobs WHERE job_id = %s"
-            result = execute_query(query, (job_id,), fetch_one=True)
+            result = await execute_query(query, (job_id,), fetch_one=True)
             
             if result:
-                # Process data
                 job_data = dict(result)
                 
-                # Parse JSON fields
-                for field in ['required_skills', 'required_education', 'word_frequencies']:
-                    if job_data.get(field) and isinstance(job_data[field], str):
-                        job_data[field] = json.loads(job_data[field])
+                # Parse features JSON field if it's a string
+                if job_data.get('features') and isinstance(job_data['features'], str):
+                    job_data['features'] = json.loads(job_data['features'])
                 
                 # Update cache
-                cache_set(cache_key, job_data, cls.CACHE_EXPIRY)
+                await cache_set(cache_key, job_data, cls.CACHE_EXPIRY)
                 
                 return job_data
-            
+                
             return None
-        
         except Exception as e:
             logger.error(f"Error getting job by ID: {str(e)}")
             return None
     
     @classmethod
-    def search_jobs(cls, criteria, limit=20, offset=0):
+    async def search_jobs(cls, criteria: Dict, limit: int = 20, offset: int = 0) -> List[Dict]:
         """
         Search for jobs with various criteria.
         
@@ -180,26 +159,25 @@ class JobRepository:
                 params.append(f"%{criteria['location']}%")
             
             if criteria.get('skills') and isinstance(criteria['skills'], list):
-                # Search for jobs that have any of the specified skills
-                placeholders = ', '.join(['%s'] * len(criteria['skills']))
-                base_query += f""" AND required_skills ?| array[{placeholders}]"""
-                params.extend(criteria['skills'])
+                # For PostgreSQL JSONB searching in features->skills
+                for skill in criteria['skills']:
+                    base_query += " AND features->>'skills' @> %s"
+                    params.append(json.dumps([skill]))
             
             # Add sorting and pagination
             base_query += " ORDER BY created_at DESC LIMIT %s OFFSET %s"
             params.extend([limit, offset])
             
             # Execute query
-            results = execute_query(base_query, params)
+            results = await execute_query(base_query, params)
             
             jobs = []
             for row in results:
                 job_data = dict(row)
                 
-                # Parse JSON fields
-                for field in ['required_skills', 'required_education', 'word_frequencies']:
-                    if job_data.get(field) and isinstance(job_data[field], str):
-                        job_data[field] = json.loads(job_data[field])
+                # Parse features JSON field
+                if job_data.get('features') and isinstance(job_data['features'], str):
+                    job_data['features'] = json.loads(job_data['features'])
                 
                 jobs.append(job_data)
             
@@ -210,7 +188,7 @@ class JobRepository:
             return []
     
     @classmethod
-    def get_recent_jobs(cls, days=30, limit=50):
+    async def get_recent_jobs(cls, days: int = 30, limit: int = 50) -> List[Dict]:
         """
         Get recent jobs from the last X days.
         
@@ -231,16 +209,15 @@ class JobRepository:
             LIMIT %s
             """
             
-            results = execute_query(query, (cutoff_date, limit))
+            results = await execute_query(query, (cutoff_date, limit))
             
             jobs = []
             for row in results:
                 job_data = dict(row)
                 
-                # Parse JSON fields
-                for field in ['required_skills', 'required_education', 'word_frequencies']:
-                    if job_data.get(field) and isinstance(job_data[field], str):
-                        job_data[field] = json.loads(job_data[field])
+                # Parse features JSON field
+                if job_data.get('features') and isinstance(job_data['features'], str):
+                    job_data['features'] = json.loads(job_data['features'])
                 
                 jobs.append(job_data)
             
@@ -251,7 +228,7 @@ class JobRepository:
             return []
     
     @classmethod
-    def is_job_expired(cls, job_id, days_threshold=30):
+    async def is_job_expired(cls, job_id: str, days_threshold: int = 30) -> bool:
         """
         Check if a job needs to be refreshed from the source.
         
@@ -268,7 +245,7 @@ class JobRepository:
             WHERE job_id = %s
             """
             
-            result = execute_query(query, (job_id,), fetch_one=True)
+            result = await execute_query(query, (job_id,), fetch_one=True)
             
             if not result:
                 return True  # Job doesn't exist, so it's "expired"
