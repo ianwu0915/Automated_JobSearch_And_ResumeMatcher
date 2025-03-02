@@ -1,6 +1,7 @@
 import json
 import logging
 from datetime import datetime
+from typing import Optional, Dict
 
 from backend.core.database import (
     execute_query, 
@@ -8,7 +9,7 @@ from backend.core.database import (
     cache_get, 
     cache_set, 
     cache_delete,
-    generate_cache_key
+    generate_cache_key,
 )
 
 logger = logging.getLogger(__name__)
@@ -20,7 +21,7 @@ class ResumeRepository:
     CACHE_EXPIRY = 86400  # 24 hours
     
     @classmethod
-    def save_resume(cls, resume_data):
+    async def save_resume(cls, resume_data: Dict) -> bool:
         """
         Save resume data to database and cache.
         
@@ -47,7 +48,7 @@ class ResumeRepository:
                 raw_text = EXCLUDED.raw_text
             """
             
-            params = (
+            values = (
                 resume_data['resume_id'],
                 resume_data['user_id'],
                 json.dumps(resume_data['features']),
@@ -55,44 +56,32 @@ class ResumeRepository:
                 datetime.now()
             )
             
-            success = execute_with_commit(query, params)
+            result = await execute_with_commit(query, values)
             
-            if success:
+            if result:
                 # Update cache with resume_id, user_id, raw_text, processed_date, features for the resume to be used by the matching service
                 cache_key = generate_cache_key(cls.CACHE_PREFIX, resume_data['resume_id'])
                 cache_set(cache_key, resume_data['features'], cls.CACHE_EXPIRY)
             
-            return success
+            return result is not None
         
         except Exception as e:
             logger.error(f"Error saving resume: {str(e)}")
             return False
     
     @classmethod
-    def get_resume_by_userid(cls, user_id):
-        """Get resume by user ID"""
+    async def get_resume_by_userid(cls, user_id: str) -> Optional[Dict]:
+        """Get resume by user ID from database"""
         try:
-            query = "SELECT * FROM user_resumes WHERE user_id = %s"
+            query = """
+                SELECT * FROM user_resumes WHERE user_id = $1
+            """
             result = execute_query(query, (user_id,), fetch_one=True)
-            
             if result:
-                # Convert database row to dictionary
-                resume_dict = dict(result)
-                
-                # Parse JSON fields if they exist
-                for field in ['features', 'raw_text', 'created_at']:
-                    if resume_dict.get(field) and isinstance(resume_dict[field], str):
-                        try:
-                            resume_dict[field] = json.loads(resume_dict[field])
-                        except json.JSONDecodeError:
-                            pass  # Keep as string if not valid JSON
-                
-                return resume_dict
-            
+                return dict(result)
             return None
-        
         except Exception as e:
-            logger.error(f"Error getting resume by user ID: {str(e)}")
+            logger.error(f"Error getting resume by user ID: {e}")
             return None
     
     @classmethod

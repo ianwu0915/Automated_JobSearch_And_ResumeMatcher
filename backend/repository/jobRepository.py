@@ -9,7 +9,7 @@ from backend.core.database import (
     cache_get, 
     cache_set, 
     cache_delete,
-    generate_cache_key
+    generate_cache_key,
 )
 
 logger = logging.getLogger(__name__)
@@ -40,50 +40,49 @@ class JobRepository:
             bool: True if save was successful, False otherwise
         """
         try:
-            # Insert or update in database
             query = """
-            INSERT INTO jobs 
-                (job_id, title, company, location, workplace_type, listed_date, apply_url, description, features, processed_date,
-                created_at) 
-            VALUES 
-                (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            ON CONFLICT (job_id) 
-            DO UPDATE SET
-                title = EXCLUDED.title,
-                company = EXCLUDED.company,
-                location = EXCLUDED.location,
-                workplace_type = EXCLUDED.workplace_type,
-                listed_date = EXCLUDED.listed_date,
-                apply_url = EXCLUDED.apply_url,
-                description = EXCLUDED.description,
-                features = EXCLUDED.features,
-                processed_date = EXCLUDED.processed_date
+                INSERT INTO jobs (
+                    job_id, title, company, location, workplace_type,
+                    listed_time, apply_url, description, features, processed_date
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                ON CONFLICT (job_id) 
+                DO UPDATE SET
+                    title = $2,
+                    company = $3,
+                    location = $4,
+                    workplace_type = $5,
+                    listed_time = $6,
+                    apply_url = $7,
+                    description = $8,
+                    features = $9,
+                    processed_date = $10
+                RETURNING job_id
             """
-
-            now = datetime.now()
             
-            params = (
+            # Convert features dict to JSON string
+            features_json = json.dumps(job_data['features'])
+            
+            values = (
                 job_data['job_id'],
                 job_data['title'],
                 job_data['company'],
                 job_data['location'],
-                job_data.get('workplace_type', 'N/A'),
-                job_data.get('listed_date', 'N/A'),
-                job_data.get('apply_url', 'N/A'),
-                job_data.get('description', ''),
-                json.dumps(job_data.get('features', {})),
-                job_data.get('processed_date', now.isoformat()),
-                now
+                job_data['workplace_type'],
+                job_data['listed_time'],
+                job_data['apply_url'],
+                job_data['description'],
+                features_json,
+                job_data['processed_date']
             )
             
-            success = await execute_with_commit(query, params)
+            result = await execute_with_commit(query, values)
             
-            if success:
+            if result:
                 # Update cache
                 cache_key = generate_cache_key(cls.CACHE_PREFIX, job_data['job_id'])
                 await cache_set(cache_key, job_data, cls.CACHE_EXPIRY)
             
-            return success
+            return result is not None
         
         except Exception as e:
             logger.error(f"Error saving job: {str(e)}")
@@ -93,13 +92,6 @@ class JobRepository:
     async def get_job_by_id(cls, job_id: str) -> Optional[Dict]:
         """Get job by ID"""
         try:
-            # Try cache first
-            cache_key = generate_cache_key(cls.CACHE_PREFIX, job_id)
-            cached_job = await cache_get(cache_key)
-            if cached_job:
-                return cached_job
-                
-            # If not in cache, get from database
             query = "SELECT * FROM jobs WHERE job_id = %s"
             result = await execute_query(query, (job_id,), fetch_one=True)
             
@@ -109,9 +101,6 @@ class JobRepository:
                 # Parse features JSON field if it's a string
                 if job_data.get('features') and isinstance(job_data['features'], str):
                     job_data['features'] = json.loads(job_data['features'])
-                
-                # Update cache
-                await cache_set(cache_key, job_data, cls.CACHE_EXPIRY)
                 
                 return job_data
                 

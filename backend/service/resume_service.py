@@ -9,7 +9,9 @@ import mimetypes
 from backend.repository.resumeRepository import ResumeRepository
 from backend.utils.feature_extractors import FeatureExtractor
 from typing import Dict, Any
+from backend.core.database import initialize_database
 from ..utils.file_processors import extract_text_from_file, SUPPORTED_MIME_TYPES
+
 
 class ResumeService:
     def __init__(self):
@@ -98,3 +100,42 @@ class ResumeService:
             return resume_data["resume_id"]
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error saving resume: {str(e)}")
+
+    async def process_resume(self, file_content: bytes, user_id: str) -> Dict:
+        """Process resume and save to database"""
+        try:
+            # Extract text from PDF
+            resume_text = self._extract_text_from_pdf(file_content)
+            
+            # Generate unique resume ID
+            resume_id = str(uuid.uuid4())
+            
+            # Process resume features
+            resume = {
+                'resume_id': resume_id,
+                'user_id': user_id,
+                'raw_text': resume_text,
+                'features': self._extract_features(resume_text)
+            }
+            
+            # Save resume - Add await here
+            await self.save_resume(resume)
+            
+            return resume
+            
+        except Exception as e:
+            print(f"Error processing resume: {str(e)}")
+            raise
+
+# Example usage
+async def main():
+    initialize_database()
+    resume_service = ResumeService()
+    resume_path = "tests/sample_data/resume1.pdf"
+    resume = await resume_service.process_resume_file(resume_path, "1")
+    print("resume", resume)
+    await resume_service.save_resume(resume)
+
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(main())

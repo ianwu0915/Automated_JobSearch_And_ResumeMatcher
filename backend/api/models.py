@@ -17,7 +17,7 @@ class JobData(BaseModel):
     company: str
     location: str
     workplace_type: str
-    listed_date: str
+    listed_time: str
     apply_url: str
     description: str
     features: Dict[str]
@@ -32,3 +32,4 @@ class MatchResult(BaseModel):
     missing_skills: List[str]
     required_experience_years: float
     resume_experience_years: float
+    created_at: str

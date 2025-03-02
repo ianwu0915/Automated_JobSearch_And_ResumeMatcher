@@ -56,15 +56,6 @@ This project implements an AI-powered job search and resume matching system with
   - Custom skill taxonomy matching
   - Experience level correlation
 
-### 4. Feature Service
-
-- Provides feature extraction capabilities
-- Implements:
-  - Text preprocessing
-  - Skill extraction
-  - Experience calculation
-  - Keyword frequency analysis
-
 ## Data Flow
 
 1. **Resume Upload Flow**

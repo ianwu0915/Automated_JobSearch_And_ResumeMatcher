@@ -9,19 +9,19 @@ from contextlib import contextmanager
 from datetime import datetime
 
 from backend.core.config import settings
+from backend.service.redis_service import RedisClient
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Initialize Redis connection
-redis_client = redis.Redis(
-    host=settings.REDIS_HOST,
-    port=settings.REDIS_PORT,
-    db=0,
-    decode_responses=True,
-    password=settings.REDIS_PASSWORD if hasattr(settings, 'REDIS_PASSWORD') else None
-)
+redis = RedisClient()
+
+class Database:
+    def __init__(self):
+        self.connection = None
+        self.cursor = None
 
 def get_db_connection():
     """
@@ -71,7 +71,7 @@ def get_db_cursor(commit=False):
             cursor.close()
             connection.close()
 
-def execute_query(query, params=None, fetch_one=False):
+async def execute_query(query, params=None, fetch_one=False):
     """
     Execute a query and return results.
     # Example usage:
@@ -87,7 +87,7 @@ def execute_query(query, params=None, fetch_one=False):
             return cursor.fetchone()
         return cursor.fetchall()
 
-def execute_with_commit(query, params=None):
+async def execute_with_commit(query, params=None):
     """
     Execute a query with commit (for INSERT, UPDATE, DELETE).
     Returns True if successful, False otherwise.
@@ -109,7 +109,7 @@ def cache_set(key, value, expiry=3600):
     try:
         if isinstance(value, (dict, list)):
             value = json.dumps(value)
-        return redis_client.set(key, value, ex=expiry)
+        return redis.set(key, value, ex=expiry)
     except Exception as e:
         logger.error(f"Redis cache set error: {str(e)}")
         return False
@@ -120,7 +120,7 @@ def cache_get(key):
     Attempts to deserialize JSON strings automatically.
     """
     try:
-        value = redis_client.get(key)
+        value = redis.get(key)
         if value:
             try:
                 return json.loads(value)
@@ -136,7 +136,7 @@ def cache_delete(key):
     Delete a key from Redis cache.
     """
     try:
-        return redis_client.delete(key)
+        return redis.delete(key)
     except Exception as e:
         logger.error(f"Redis cache delete error: {str(e)}")
         return False
@@ -160,13 +160,10 @@ def initialize_database():
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS user_resumes (
             id SERIAL PRIMARY KEY,
-            user_id VARCHAR(50) NOT NULL,
             resume_id VARCHAR(50) UNIQUE NOT NULL,
-            skills JSONB,
-            years_experience VARCHAR(50),
-            education JSONB,
-            word_frequencies JSONB,
-            raw_text TEXT,
+            user_id VARCHAR(50) NOT NULL,
+            features JSONB NOT NULL,
+            raw_text TEXT NOT NULL,
             created_at TIMESTAMP NOT NULL DEFAULT NOW()
         )
         """)
@@ -179,18 +176,14 @@ def initialize_database():
             job_id VARCHAR(50) UNIQUE NOT NULL,
             title VARCHAR(255) NOT NULL,
             company VARCHAR(255) NOT NULL,
-            location VARCHAR(255),
-            workplace_type VARCHAR(50),
-            description TEXT,
-            required_skills JSONB,
-            required_experience VARCHAR(50),
-            required_education JSONB,
-            word_frequencies JSONB,
-            apply_url TEXT,
-            listed_time VARCHAR(50),
-            source VARCHAR(50) DEFAULT 'linkedin',
-            created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-            updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+            location VARCHAR(255) NOT NULL,
+            workplace_type VARCHAR(255) NOT NULL,
+            listed_time TIMESTAMP NOT NULL,
+            apply_url VARCHAR(255) NOT NULL,
+            description TEXT NOT NULL,
+            features JSONB NOT NULL,
+            processed_date TIMESTAMP NOT NULL,
+            created_at TIMESTAMP NOT NULL DEFAULT NOW()
         )
         """)
         
@@ -201,14 +194,12 @@ def initialize_database():
             id SERIAL PRIMARY KEY,
             resume_id VARCHAR(50) NOT NULL,
             job_id VARCHAR(50) NOT NULL,
-            overall_match FLOAT NOT NULL,
-            skills_match FLOAT,
-            experience_match FLOAT,
-            education_match FLOAT,
-            contextual_match FLOAT,
-            missing_skills JSONB,
-            created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-            UNIQUE(resume_id, job_id)
+            match_score FLOAT NOT NULL,
+            matched_skills JSONB NOT NULL,
+            missing_skills JSONB NOT NULL,
+            required_experience_years FLOAT NOT NULL,
+            resume_experience_years FLOAT NOT NULL,
+            created_at TIMESTAMP NOT NULL DEFAULT NOW()
         )
         """)
         

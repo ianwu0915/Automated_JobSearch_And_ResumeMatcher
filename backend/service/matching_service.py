@@ -5,6 +5,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from backend.service.resume_service import ResumeService
 from backend.service.job_service import JobService
 from backend.repository.matchRepository import MatchRepository
+from backend.core.database import initialize_database
 
 class MatchingService:
     def __init__(self, resume_service: ResumeService, job_service: JobService):
@@ -240,17 +241,21 @@ class MatchingService:
 # Example usage
 async def main():
     from redis import Redis
-    from backend.service.feature_service import FeatureService
     
     # Initialize services
     redis_client = Redis(host='localhost', port=6379, db=0)
-    feature_service = FeatureService()
-    resume_service = ResumeService(feature_service)
-    job_service = JobService(feature_service, redis_client)
+    initialize_database()
+    resume_service = ResumeService()
+    job_service = JobService(redis_client)
     matching_service = MatchingService(resume_service, job_service)
     
     # Example resume and job IDs
     resume_path = "tests/sample_data/resume1.pdf"
+    
+    resume = await resume_service.process_resume(resume_path)
+    print("resume", resume)
+    resume_service.save_resume(resume)
+    
     jobs = await job_service.search_jobs_parallel([{"keywords": "Software Engineer", "location_name": "United States", "remote": ["2"], "experience": ["2", "3"], "job_type": ["F", "C"], "limit": 50}])
     
     # Get matches

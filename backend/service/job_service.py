@@ -121,7 +121,7 @@ class JobService:
     async def is_job_processed(self, job_id: str) -> bool:
         """Check if job has been processed and cached"""
         try:
-            exists = await self.redis_client.exists(self._get_cache_key(job_id))
+            exists = self.redis_client.exists(self._get_cache_key(job_id))
             return exists
         except Exception as e:
             print(f"Error checking if job is processed: {e}")
@@ -130,12 +130,10 @@ class JobService:
     async def cache_job(self, job_id: str, job_details: Dict):
         """Cache job details"""
         try:
-            # Serialize the dictionary to JSON string
             serialized_data = json.dumps(job_details)
-            
-            await self.redis_client.set(
-                key=self._get_cache_key(job_id),
-                value=serialized_data,
+            self.redis_client.set(
+                self._get_cache_key(job_id),
+                serialized_data,
                 ex=JOB_CACHE_EXPIRY
             )
         except Exception as e:
@@ -144,13 +142,21 @@ class JobService:
     async def get_cached_job(self, job_id: str) -> Optional[Dict]:        
         """Get cached job details"""
         try:
-            cached_data = await self.redis_client.get(self._get_cache_key(job_id))
+            cached_data = self.redis_client.get(self._get_cache_key(job_id))
             if cached_data:
                 # Deserialize JSON string back to dictionary
-                return json.loads(cached_data)
+                return json.loads(cached_data.decode('utf-8'))
             return None
         except Exception as e:
             print(f"Error retrieving cached job {job_id}: {e}")
+            return None
+
+    def get_job_details_by_id(self, job_id: str) -> Dict:
+        """Get detailed job information from LinkedIn API"""
+        try:
+            return self.linkedin_api.get_job(job_id)
+        except Exception as e:
+            print(f"Error getting job details from LinkedIn: {e}")
             return None
 
     def extract_metadata(self, details: Dict) -> Dict:
@@ -210,7 +216,7 @@ class JobService:
                 return db_job
             
             # Get full job details
-            details = self.linkedin_api.get_job(job_id)
+            details = self.get_job_details_by_id(job_id)
             if not details:
                 return None
             
@@ -232,7 +238,7 @@ class JobService:
                 "company": metadata['company'],
                 "location": metadata['location'],
                 "workplace_type": metadata['workplace_type'],
-                "listed_date": metadata['listed_time'],
+                "listed_time": metadata['listed_time'],
                 "apply_url": self.get_apply_url(details),
                 "description": job_desc,
                 "features": job_features,
