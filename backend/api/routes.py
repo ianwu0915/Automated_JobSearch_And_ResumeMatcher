@@ -165,13 +165,14 @@ async def get_job(job_id: str):
 @router.get("/matches/history", tags=["matching"])
 async def get_match_history(
     user_id: str = Query(..., description="User ID to get match history for"),
-    limit: int = Query(50, description="Maximum number of matches to return")
+    limit: int = Query(50, description="Maximum number of matches to return"),
+    min_score: int = Query(50, description="Minimum match score to return")
 ):
     """
     Get historical match results for a user.
     """
     try:
-        matches = await matching_service.get_job_and_matches_for_resume(user_id, limit)
+        matches = await matching_service.get_job_and_matches_for_resume(user_id, limit, min_score)
         return {
             "user_id": user_id,
             "total_matches": len(matches),

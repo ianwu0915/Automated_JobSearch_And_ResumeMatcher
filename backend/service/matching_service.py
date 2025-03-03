@@ -34,8 +34,12 @@ class MatchingService:
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error storing match results: {str(e)}")
     
-    async def get_job_and_matches_for_resume(self, resume_id: str, limit: int = 20, min_score: float = 50.0):
+    async def get_job_and_matches_for_resume(self, user_id: str, limit: int = 20, min_score: float = 50.0):
         """Get stored matches for a resume"""
+        resume = await self.resume_service.get_resume_by_user_id(user_id)
+        if not resume:
+            raise HTTPException(status_code=404, detail="Resume not found")
+        resume_id = resume["resume_id"]
         try:
             matches = await self.match_repo.get_job_and_matches_by_resume_id(resume_id, limit, min_score)
             return matches
