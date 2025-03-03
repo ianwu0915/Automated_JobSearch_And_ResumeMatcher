@@ -72,9 +72,9 @@ async def upload_resume(
             detail=f"Error processing resume: {str(e)}"
         )
         
-@router.get("/resumes/{resume_id}", tags=["resumes"])
-async def get_resume(resume_id: str):
-    resume = await resume_service.get_resume_by_user_id(resume_id)
+@router.get("/resumes/{user_id}", tags=["resumes"])
+async def get_latest_resume_by_user_id(user_id: str):
+    resume = await resume_service.get_resume_by_user_id(user_id)
     return resume
 
 @router.get("/jobs/search_and_match", tags=["jobs", "matching"])
@@ -115,12 +115,8 @@ async def search_jobs_and_match(
         
         # Store jobs in database and cache if not already present
         for job in jobs:
-            # Check if job exists in cache or database
-            cached_job = await job_service.get_job_by_id(job["job_id"])
-            if not cached_job:
-                await job_service.save_job(job)
-        
-        resume = await resume_service.get_resume_by_user_id(user_id)
+           await job_service.save_job(job)
+            
         
         # Match jobs with resume
         matches = await matching_service.match_resume_to_jobs(  
@@ -130,7 +126,7 @@ async def search_jobs_and_match(
         )
         
         # Store match results
-        await matching_service.store_match_results(matches, user_id)
+        await matching_service.store_match_results(matches)
         
         return {
             "message": "Jobs found and matched successfully",
