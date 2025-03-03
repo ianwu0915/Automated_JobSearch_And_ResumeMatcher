@@ -41,6 +41,15 @@ class JobRepository:
             bool: True if save was successful, False otherwise
         """
         try:
+            
+            job_data_copy = job_data.copy()
+            # Convert datetime objects to strings for JSON serialization
+            if isinstance(job_data_copy.get('processed_date'), datetime):
+                job_data_copy['processed_date'] = job_data_copy['processed_date'].isoformat()
+            
+            if isinstance(job_data_copy.get('listed_time'), datetime):
+                job_data_copy['listed_time'] = job_data_copy['listed_time'].isoformat()
+            
             query = """
                 INSERT INTO jobs (
                     job_id, title, company, location, workplace_type,
@@ -73,8 +82,11 @@ class JobRepository:
             
             if result:
                 # Update cache
-                cache_key = redis_client.generate_cache_key(cls.CACHE_PREFIX, job_data['job_id'])
-                redis_client.set(cache_key, job_data, cls.CACHE_EXPIRY)
+                try:
+                    cache_key = redis_client.generate_cache_key(cls.CACHE_PREFIX, job_data['job_id'])
+                    redis_client.set(cache_key, job_data_copy, cls.CACHE_EXPIRY)
+                except Exception as e:
+                    logger.error(f"Error updating cache: {str(e)}")
             
             return result is not None
         

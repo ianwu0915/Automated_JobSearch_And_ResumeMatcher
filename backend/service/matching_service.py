@@ -78,12 +78,12 @@ class MatchingService:
             return {
                 "resume_id": resume["resume_id"],
                 "job_id": job["job_id"],
-                "match_score": match_score,
+                "match_score": int(match_score),
                 "matched_skills": match_details["matched_skills"],
                 "missing_skills": match_details["missing_skills"],
                 "required_experience_years": match_details["experience_years"]["required"],
                 "resume_experience_years": match_details["experience_years"]["resume"],
-
+                "job": job
             }
             
         except Exception as e:
@@ -284,18 +284,21 @@ async def main():
         await job_service.save_job(job)
     
     # Get matches
-    matches = await matching_service.match_resume_to_jobs(resume_path, jobs)
+    matches = await matching_service.match_resume_to_jobs(jobs, "1")
+    
+    # Store matches
+    await matching_service.store_match_results(matches)
     
     # Print results
     print("\nMatch Results:")
     for match in matches:
-        print(f"\nJob: {match['title']} at {match['company']}")
-        print(f"Match Score: {match['match_score']}%")
-        print("Match Details:")
-        print(f"- Matched Skills: {', '.join(match['match_details']['matched_skills'])}")
-        print(f"- Missing Skills: {', '.join(match['match_details']['missing_skills'])}")
-        print(f"- Experience: {match['match_details']['experience_years']['resume']} years " +
-              f"(Required: {match['match_details']['experience_years']['required']} years)")
+        # Access job details through the job field
+        print(f"\nJob: {match['job']['title']} at {match['job']['company']}")
+        print(f"Match Score: {match['match_score']:.2f}")
+        print("Matched Skills:", ", ".join(match['matched_skills']))
+        print("Missing Skills:", ", ".join(match['missing_skills']))
+        print(f"Required Experience: {match['required_experience_years']} years")
+        print(f"Resume Experience: {match['resume_experience_years']} years")
 
 if __name__ == "__main__":
     import asyncio

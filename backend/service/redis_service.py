@@ -1,7 +1,7 @@
 import redis
 import os
 from typing import Optional
-
+from datetime import datetime
 from backend.utils.lazy_module import LazyModule 
 import json
 # pip install redis hiredis 
@@ -11,7 +11,13 @@ from datetime import timedelta
 
 import json
 import redis
-
+class DateTimeEncoder(json.JSONEncoder):
+    """Custom JSON encoder that handles datetime objects"""
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        return super().default(obj)
+    
 class RedisClient:
     def __init__(self, host='localhost', port=6379, db=0):
         # db 0 is default for redis among 16 other logical databases
@@ -34,7 +40,7 @@ class RedisClient:
         """Set value in Redis with optional expiry, serializing if needed"""
         # Serialize value if it's a dict or list
         if isinstance(value, (dict, list)):
-            value = json.dumps(value)
+            value = json.dumps(value, cls=DateTimeEncoder)
         self.client.set(name=key, value=value, ex=ex)
     
     def exists(self, key):
@@ -43,12 +49,10 @@ class RedisClient:
     
     def delete(self, key):
         """Delete key from Redis"""
-        self.client.delete(key)      
-    
+        self.client.delete(key)
+        
     def generate_cache_key(self, prefix, identifier):
-        """
-        Generate a consistent cache key with a prefix and identifier.
-        """
+        """Generate a consistent cache key with a prefix and identifier"""
         return f"{prefix}:{identifier}"
 
 

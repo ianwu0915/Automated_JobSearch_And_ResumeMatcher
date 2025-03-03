@@ -194,12 +194,13 @@ def initialize_database():
             id SERIAL PRIMARY KEY,
             resume_id VARCHAR(50) NOT NULL,
             job_id VARCHAR(50) NOT NULL,
-            match_score FLOAT NOT NULL,
-            matched_skills JSONB NOT NULL,
-            missing_skills JSONB NOT NULL,
-            required_experience_years FLOAT NOT NULL,
-            resume_experience_years FLOAT NOT NULL,
-            created_at TIMESTAMP NOT NULL DEFAULT NOW()
+            match_score INTEGER NOT NULL,
+            matched_skills JSONB,
+            missing_skills JSONB,
+            required_experience_years FLOAT,
+            resume_experience_years FLOAT,
+            created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+            CONSTRAINT unique_resume_job UNIQUE (resume_id, job_id)
         )
         """)
         
