@@ -2,29 +2,26 @@ from fastapi import APIRouter, HTTPException, File, UploadFile, Query
 from typing import List
 import os
 
-from backend.core.database import get_db_cursor, redis_client
+from backend.service.redis_service import RedisClient
 from backend.service.resume_service import ResumeService
 from backend.service.job_service import JobService
 from backend.service.matching_service import MatchingService
-from backend.repository.resumeRepository import ResumeRepository
-from backend.repository.jobRepository import JobRepository
-from backend.repository.matchRepository import MatchRepository
 
-router = APIRouter(prefix="/api", tags=["resumes"])
+router = APIRouter(prefix="/api")
 
 # Service instances
 resume_service = ResumeService()
-job_service = JobService(redis_client)
+job_service = JobService()
 matching_service = MatchingService(resume_service, job_service)
 
 @router.get("/")
 async def hello_world():
     return {"message": "Hello World"}
 
-@router.post("/resumes/upload")
+@router.post("/resumes/upload", tags=["resumes"])
 async def upload_resume(
     file: UploadFile = File(...),
-    user_id: str = Query(..., description="User ID for the resume")
+    user_id: str = Query(..., description="User ID for the resume") # /api/resumes/upload?user_id=1
 ):
     """
     Upload and process a resume file.
@@ -34,7 +31,7 @@ async def upload_resume(
         # Save file temporarily
         temp_dir = "temp"
         os.makedirs(temp_dir, exist_ok=True)
-        file_path = os.path.join(temp_dir, file.filename)
+        file_path = os.path.join(temp_dir, file.filename) # temp/resume.pdf
         
         with open(file_path, "wb") as buffer:
             content = await file.read()
@@ -75,12 +72,12 @@ async def upload_resume(
             detail=f"Error processing resume: {str(e)}"
         )
         
-@router.get("/resumes/{resume_id}")
+@router.get("/resumes/{resume_id}", tags=["resumes"])
 async def get_resume(resume_id: str):
     resume = await resume_service.get_resume_by_user_id(resume_id)
     return resume
 
-@router.get("/jobs/search_and_match")
+@router.get("/jobs/search_and_match", tags=["jobs", "matching"])
 async def search_jobs_and_match(
     keywords: str = Query(..., description="Job search keywords"),
     location: str = Query("United States", description="Location for job search"),
@@ -147,7 +144,7 @@ async def search_jobs_and_match(
             detail=f"Error searching and matching jobs: {str(e)}"
         )
 
-@router.get("/jobs/{job_id}")
+@router.get("/jobs/{job_id}", tags=["jobs"])
 async def get_job(job_id: str):
     """
     Get details for a specific job, including any cached match results.
@@ -169,7 +166,7 @@ async def get_job(job_id: str):
             detail=f"Error retrieving job: {str(e)}"
         )
 
-@router.get("/matches/history")
+@router.get("/matches/history", tags=["matching"])
 async def get_match_history(
     user_id: str = Query(..., description="User ID to get match history for"),
     limit: int = Query(50, description="Maximum number of matches to return")
