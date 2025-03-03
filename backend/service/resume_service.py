@@ -133,8 +133,11 @@ async def main():
     resume_service = ResumeService()
     resume_path = "tests/sample_data/resume1.pdf"
     resume = await resume_service.process_resume_file(resume_path, "1")
-    print("resume", resume)
     await resume_service.save_resume(resume)
+    
+    # Test get resume by user id
+    resume = await resume_service.get_resume_by_user_id("1")
+    print("resume", resume)
 
 if __name__ == "__main__":
     import asyncio

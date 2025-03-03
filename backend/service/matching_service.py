@@ -53,7 +53,7 @@ class MatchingService:
             # Calculate match scores for each job
             matches = []
             for job in jobs:
-                match_result = await self.match_resume_with_job(resume, job)
+                match_result = self.match_resume_with_job(resume, job)
                 matches.append(match_result)
             
             # Sort by match score descending
@@ -66,7 +66,7 @@ class MatchingService:
                 detail=f"Error matching resume to jobs: {str(e)}"
             )
     
-    async def match_resume_with_job(self, resume: Dict, job: Dict) -> Dict[str, Any]:
+    def match_resume_with_job(self, resume: Dict, job: Dict) -> Dict[str, Any]:
         """Match a single resume with a single job"""
         try:
             # Calculate match score
@@ -243,20 +243,45 @@ async def main():
     from redis import Redis
     
     # Initialize services
-    redis_client = Redis(host='localhost', port=6379, db=0)
     initialize_database()
     resume_service = ResumeService()
-    job_service = JobService(redis_client)
+    job_service = JobService()
     matching_service = MatchingService(resume_service, job_service)
     
-    # Example resume and job IDs
+    # Example resume 
     resume_path = "tests/sample_data/resume1.pdf"
-    
-    resume = await resume_service.process_resume(resume_path)
+    resume = await resume_service.process_resume_file(resume_path, "1")
     print("resume", resume)
-    resume_service.save_resume(resume)
+    await resume_service.save_resume(resume)
     
-    jobs = await job_service.search_jobs_parallel([{"keywords": "Software Engineer", "location_name": "United States", "remote": ["2"], "experience": ["2", "3"], "job_type": ["F", "C"], "limit": 50}])
+    # Example jobs
+    search_params_list = [
+        {
+            "keywords": "Software Engineer",
+            "location_name": "United States",
+            "remote": ["2"],
+            "experience": ["2", "3"],
+            "job_type": ["F", "C"],
+            "limit": 10,
+        },
+        {
+            "keywords": "Software Developer",
+            "location_name": "United States",
+            "experience": ["2", "3"],
+            "job_type": ["F", "C"],
+            "limit": 10,
+        },
+        {
+            "keywords": "Backend",
+            "location_name": "United States",
+            "experience": ["2", "3"],
+            "job_type": ["F", "C"],
+            "limit": 10,
+        }
+    ]
+    jobs = await job_service.search_jobs_parallel(search_params_list)
+    for job in jobs:
+        await job_service.save_job(job)
     
     # Get matches
     matches = await matching_service.match_resume_to_jobs(resume_path, jobs)

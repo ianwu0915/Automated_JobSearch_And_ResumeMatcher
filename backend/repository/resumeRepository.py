@@ -74,9 +74,9 @@ class ResumeRepository:
         """Get resume by user ID from database"""
         try:
             query = """
-                SELECT * FROM user_resumes WHERE user_id = $1
+                SELECT * FROM user_resumes WHERE user_id = %s
             """
-            result = execute_query(query, (user_id,), fetch_one=True)
+            result = await execute_query(query, (user_id,), fetch_one=True)
             if result:
                 return dict(result)
             return None
@@ -85,7 +85,7 @@ class ResumeRepository:
             return None
     
     @classmethod
-    def get_resume_by_id(cls, resume_id):
+    async def get_resume_by_id(cls, resume_id):
         """
         Get resume data by ID, with caching.
         
@@ -105,7 +105,7 @@ class ResumeRepository:
             
             # If not in cache, get from database
             query = "SELECT * FROM user_resumes WHERE resume_id = %s"
-            result = execute_query(query, (resume_id,), fetch_one=True)
+            result = await execute_query(query, (resume_id,), fetch_one=True)
             
             if result:
                 # Convert database row to dictionary
@@ -128,7 +128,7 @@ class ResumeRepository:
             return None
     
     @classmethod
-    def get_resumes_by_user(cls, user_id):
+    async def get_resumes_by_user(cls, user_id):
         """
         Get all resumes for a user.
         
@@ -140,7 +140,7 @@ class ResumeRepository:
         """
         try:
             query = "SELECT * FROM user_resumes WHERE user_id = %s ORDER BY created_at DESC"
-            results = execute_query(query, (user_id,))
+            results = await execute_query(query, (user_id,))
             
             resumes = []
             for row in results:
@@ -153,14 +153,14 @@ class ResumeRepository:
                 
                 resumes.append(resume_data)
             
-            return resumes
+            return resumes[0]
         
         except Exception as e:
             logger.error(f"Error getting resumes by user: {str(e)}")
             return []
     
     @classmethod
-    def delete_resume(cls, resume_id):
+    async def delete_resume(cls, resume_id):
         """
         Delete a resume by ID.
         

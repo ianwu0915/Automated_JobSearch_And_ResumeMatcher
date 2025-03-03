@@ -6,13 +6,11 @@ from typing import List, Dict, Optional
 from backend.core.database import (
     execute_query, 
     execute_with_commit, 
-    cache_get, 
-    cache_set, 
-    cache_delete,
     generate_cache_key
 )
-
+from backend.service.redis_service import RedisClient
 logger = logging.getLogger(__name__)
+redis_client = RedisClient()
 
 class MatchRepository:
     """Repository for match results with caching"""
@@ -55,8 +53,8 @@ class MatchRepository:
             
             if success:
                 # Update cache
-                cache_key = generate_cache_key(cls.CACHE_PREFIX, f"{match_data['resume_id']}:{match_data['job_id']}")
-                await cache_set(cache_key, match_data, cls.CACHE_EXPIRY)
+                cache_key = redis_client.generate_cache_key(cls.CACHE_PREFIX, f"{match_data['resume_id']}:{match_data['job_id']}")
+                redis_client.set(cache_key, match_data, cls.CACHE_EXPIRY)
             
             return success
             
@@ -98,7 +96,7 @@ class MatchRepository:
             return []
     
     @classmethod
-    def get_match_details_by_resume_id(cls, resume_id, job_id):
+    async def get_match_details_by_resume_id(cls, resume_id, job_id):
         """
         Get match result details by resume_id and job_id, with caching.
         
@@ -111,8 +109,8 @@ class MatchRepository:
         """
         try:
             # Check cache first
-            cache_key = generate_cache_key(cls.CACHE_PREFIX, f"{resume_id}:{job_id}")
-            cached_data = cache_get(cache_key)
+            cache_key = redis_client.generate_cache_key(cls.CACHE_PREFIX, f"{resume_id}:{job_id}")
+            cached_data = redis_client.get(cache_key)
             
             if cached_data:
                 return cached_data
@@ -132,7 +130,7 @@ class MatchRepository:
                     match_data['matched_skills'] = json.loads(match_data['matched_skills'])
                 
                 # Update cache
-                cache_set(cache_key, match_data, cls.CACHE_EXPIRY)
+                redis_client.set(cache_key, match_data, cls.CACHE_EXPIRY)
                 
                 return match_data
             
@@ -143,7 +141,7 @@ class MatchRepository:
             return None
     
     @classmethod
-    def delete_match_results(cls, resume_id=None, job_id=None):
+    async def delete_match_results(cls, resume_id=None, job_id=None):
         """
         Delete match results for a resume, job, or both.
         
@@ -161,8 +159,8 @@ class MatchRepository:
                 params = (resume_id, job_id)
                 
                 # Delete from cache
-                cache_key = generate_cache_key(cls.CACHE_PREFIX, f"{resume_id}:{job_id}")
-                cache_delete(cache_key)
+                cache_key = redis_client.generate_cache_key(cls.CACHE_PREFIX, f"{resume_id}:{job_id}")
+                redis_client.delete(cache_key)
                 
             elif resume_id:
                 # Delete all matches for a resume
