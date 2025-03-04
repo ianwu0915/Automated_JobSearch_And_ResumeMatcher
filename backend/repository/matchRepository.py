@@ -6,7 +6,6 @@ from typing import List, Dict, Optional
 from backend.core.database import (
     execute_query, 
     execute_with_commit, 
-    generate_cache_key
 )
 from backend.service.redis_service import RedisClient
 logger = logging.getLogger(__name__)

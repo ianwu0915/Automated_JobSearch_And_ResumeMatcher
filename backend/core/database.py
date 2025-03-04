@@ -155,6 +155,27 @@ def initialize_database():
     """
     logger.info("Starting database initialization...")
     with get_db_cursor(commit=True) as cursor:
+        
+        # Create users table
+        logger.info("Creating users table if not exists...")
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            user_id VARCHAR(50) UNIQUE NOT NULL,
+            email VARCHAR(255) UNIQUE NOT NULL,
+            full_name VARCHAR(255) NOT NULL,
+            hashed_password VARCHAR(255) NOT NULL,
+            is_active BOOLEAN NOT NULL DEFAULT TRUE,
+            is_verified BOOLEAN NOT NULL DEFAULT FALSE,
+            role VARCHAR(20) NOT NULL DEFAULT 'user',
+            created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+            updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+        CREATE INDEX IF NOT EXISTS idx_users_user_id ON users(user_id);
+        """)
+        
         # Create user_resumes table
         logger.info("Creating user_resumes table if not exists...")
         cursor.execute("""
@@ -216,3 +237,5 @@ def initialize_database():
         """)
         
         logger.info("Database initialization completed successfully!")
+        
+        
