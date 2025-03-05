@@ -11,12 +11,13 @@ import { authService } from '@/services/authService';
  */
 
 // Define the shape of our context
-interface AuthContextType {
+export interface AuthContextType {
   state: AuthState;
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (userData: RegisterData) => Promise<void>;
   logout: () => void;
 }
+
 
 // Initial state: information about the user's session
 const initialState: AuthState = {
@@ -170,3 +171,4 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     </AuthContext.Provider>
   );
 };
+
