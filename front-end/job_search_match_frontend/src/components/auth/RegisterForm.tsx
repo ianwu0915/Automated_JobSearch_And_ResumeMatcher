@@ -1,0 +1,111 @@
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
+import { FormInput } from '@/components/common/FormInput';
+import { Button } from '@/components/common/Button';
+import { RegisterData } from '@/types';
+
+interface RegisterFormProps {
+  onSubmit: (values: RegisterData) => Promise<void>;
+  isLoading: boolean;
+  error: string | null;
+}
+
+export const RegisterForm = ({ 
+  onSubmit, 
+  isLoading, 
+  error 
+}: RegisterFormProps) => {
+  const formik = useFormik({
+    initialValues: {
+      fullName: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+    },
+    validationSchema: Yup.object({
+      fullName: Yup.string()
+        .required('Full name is required'),
+      email: Yup.string()
+        .email('Invalid email address')
+        .required('Email is required'),
+      password: Yup.string()
+        .min(8, 'Password must be at least 8 characters')
+        .required('Password is required'),
+      confirmPassword: Yup.string()
+        .oneOf([Yup.ref('password')], 'Passwords must match')
+        .required('Please confirm your password'),
+    }),
+    onSubmit: async (values) => {
+      const { confirmPassword, ...registerData } = values;
+      await onSubmit(registerData);
+    },
+  });
+
+  return (
+    <form onSubmit={formik.handleSubmit} className="space-y-4">
+      <FormInput
+        label="Full Name"
+        name="fullName"
+        type="text"
+        placeholder="John Doe"
+        value={formik.values.fullName}
+        onChange={formik.handleChange}
+        onBlur={formik.handleBlur}
+        error={formik.errors.fullName}
+        touched={formik.touched.fullName}
+      />
+
+      <FormInput
+        label="Email"
+        name="email"
+        type="email"
+        placeholder="your.email@example.com"
+        value={formik.values.email}
+        onChange={formik.handleChange}
+        onBlur={formik.handleBlur}
+        error={formik.errors.email}
+        touched={formik.touched.email}
+      />
+
+      <FormInput
+        label="Password"
+        name="password"
+        type="password"
+        placeholder="********"
+        value={formik.values.password}
+        onChange={formik.handleChange}
+        onBlur={formik.handleBlur}
+        error={formik.errors.password}
+        touched={formik.touched.password}
+      />
+
+      <FormInput
+        label="Confirm Password"
+        name="confirmPassword"
+        type="password"
+        placeholder="********"
+        value={formik.values.confirmPassword}
+        onChange={formik.handleChange}
+        onBlur={formik.handleBlur}
+        error={formik.errors.confirmPassword}
+        touched={formik.touched.confirmPassword}
+      />
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
+          {error}
+        </div>
+      )}
+
+      <Button
+        type="submit"
+        variant="primary"
+        fullWidth
+        isLoading={isLoading}
+        disabled={isLoading}
+      >
+        Create Account
+      </Button>
+    </form>
+  );
+};

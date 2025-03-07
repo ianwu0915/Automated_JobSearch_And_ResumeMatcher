@@ -72,10 +72,16 @@ async def upload_resume(
             detail=f"Error processing resume: {str(e)}"
         )
         
-@router.get("/resumes/{user_id}", tags=["resumes"])
-async def get_latest_resume_by_user_id(user_id: str):
-    resume = await resume_service.get_resume_by_user_id(user_id)
-    return resume
+@router.get("/resumes/user", tags=["resumes"])    
+async def get_latest_resume_by_user_id(user_id: str = Query(..., description="User ID to get latest resume for")):
+    """
+    Get the most recent resume for a user.
+    """
+    try:
+        resume = await resume_service.get_resume_by_user_id(user_id)
+        return resume
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting resume: {str(e)}")
 
 @router.get("/jobs/search_and_match", tags=["jobs", "matching"])
 async def search_jobs_and_match(
