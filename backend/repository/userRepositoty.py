@@ -9,7 +9,7 @@ class UserRepository:
     async def create_user(self, user: UserInDB) -> str:
         query = """
         INSERT INTO users (user_id, email, full_name, hashed_password, is_active, is_verified, role, created_at, updated_at)
-        VALUES (user_id, email, full_name, hashed_password, is_active, is_verified, role, created_at, updated_at)
+        VALUES (%(user_id)s, %(email)s, %(full_name)s, %(hashed_password)s, %(is_active)s, %(is_verified)s, %(role)s, %(created_at)s, %(updated_at)s)
         RETURNING user_id
         """
     
@@ -25,6 +25,7 @@ class UserRepository:
             "updated_at": user.updated_at
         }
         result = await execute_query(query, params, fetch_one=True)
+        print("result", result)
         return result['user_id'] if result else None
     
     async def get_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:

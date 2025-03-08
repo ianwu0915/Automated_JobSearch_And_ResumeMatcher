@@ -43,9 +43,10 @@ class AuthService:
             created_at=now,
             updated_at=now
         )
-        
+        print("user_in_db", user_in_db)
         try: 
             user_id = await self.user_repo.create_user(user_in_db)
+            print("user_id", user_id)
             return user_id
         except Exception as e:
             raise HTTPException(
@@ -80,7 +81,7 @@ class AuthService:
                 headers={"WWW-Authenticate": "Bearer"}
             )
         
-        if not user.is_acive:
+        if not user.is_active:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Inactive user"

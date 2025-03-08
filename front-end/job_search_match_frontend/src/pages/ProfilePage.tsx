@@ -16,10 +16,10 @@ export const ProfilePage: React.FC = () => {
 
   useEffect(() => {
     // Redirect if not authenticated
-    // if (!state.isAuthenticated) {
-    //   navigate('/login');
-    //   return;
-    // }
+    if (!state.isAuthenticated) {
+      navigate('/login');
+      return;
+    }
 
     // Fetch user's resume
     const fetchResume = async () => {
@@ -42,6 +42,7 @@ export const ProfilePage: React.FC = () => {
 
   const handleResumeUpload = async (file: File, userId: string) => {
     try {
+      console.log("handleResumeUpload", file, userId);
       const result = await resumeService.uploadResume(file, userId);
       
       // Refetch the resume to get the full object
@@ -71,6 +72,7 @@ export const ProfilePage: React.FC = () => {
     );
   }
 
+  console.log("state.user", state.user);
   return (
     // <div className="max-w-3xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
     <div className="w-full mx-auto py-10 px-4 sm:px-6 lg:px-8">

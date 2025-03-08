@@ -44,7 +44,7 @@ def get_db_connection():
         raise Exception(f"Failed to connect to database: {str(e)}")
 
 @contextmanager
-def get_db_cursor(commit=False):
+def get_db_cursor(commit=True):
     """
     Context manager for database connections.
     Automatically handles connection cleanup and optionally commits.

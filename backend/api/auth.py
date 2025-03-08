@@ -15,9 +15,12 @@ async def register(
     user_data: UserCreate,  
     user_repo: UserRepository = Depends(),
 ) -> Dict[str, Any]:
+    
     """Register a new user"""
+    print("user_data", user_data)
     auth_service = AuthService(user_repo)
     user_id = await auth_service.register_user(user_data)
+    print("user_id", user_id)
     
     return {
         "message": "User registered successfully",

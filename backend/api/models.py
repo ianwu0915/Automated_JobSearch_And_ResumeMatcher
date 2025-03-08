@@ -1,5 +1,9 @@
 from pydantic import BaseModel
 from typing import List, Dict
+from humps import camelize
+
+def to_camel(string):
+    return camelize(string)
 
 class ResumeData(BaseModel):
     user_id: str
@@ -9,6 +13,10 @@ class ResumeData(BaseModel):
     education: List[Dict] = []
     projects: List[Dict] = []
     raw_text: str = ""
+    
+    class Config:
+        populate_by_name = True
+        alias_generator = to_camel
     
 # Job structure model
 class JobData(BaseModel):

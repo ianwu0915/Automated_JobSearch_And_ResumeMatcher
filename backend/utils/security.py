@@ -10,6 +10,7 @@ from backend.api.models.user import User
 from backend.repository.userRepositoty import UserRepository
 from datetime import timezone
 
+
 # Initialize password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

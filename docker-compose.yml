@@ -4,9 +4,9 @@ services:
   postgres:
     image: postgres:15
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: job_search_match
+      POSTGRES_USER: job_search_match
+      POSTGRES_PASSWORD: job_search_match
     ports:
       - "5432:5432"
     volumes:

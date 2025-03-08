@@ -13,16 +13,22 @@ export const resumeService = {
   ): Promise<ApiResponse<{ resumeId: string; features: any }>> {
     const formData = new FormData();
     formData.append("file", file);
+    console.log("userId", userId);
 
-    const response = await api.post<
-      ApiResponse<{ resumeId: string; features: any }>
+    try {
+      const response = await api.post<
+        ApiResponse<{ resumeId: string; features: any }>
     >(`${RESUME_ENDPOINTS.UPLOAD}?user_id=${userId}`, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
-    });
-
-    return response.data;
+      });
+      console.log("response", response);
+      return response.data;
+    } catch (error) {
+      console.error("Error uploading resume:", error);
+      throw error;
+    }
   },
 
   async getResumeByUserId(userId: string): Promise<Resume> {

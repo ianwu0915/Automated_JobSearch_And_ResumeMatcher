@@ -1,6 +1,6 @@
-import React, { createContext, useReducer, useEffect, ReactNode } from 'react';
-import { AuthState, LoginCredentials, RegisterData, User } from '@/types';
-import { authService } from '@/services/authService';
+import React, { createContext, useReducer, useEffect, ReactNode } from "react";
+import { AuthState, LoginCredentials, RegisterData, User } from "@/types";
+import { authService } from "@/services/authService";
 
 /**
  * This is the AuthContext component that provides a central place to manage the authentication state and the user's session.
@@ -18,12 +18,11 @@ export interface AuthContextType {
   logout: () => void;
 }
 
-
 // Initial state: information about the user's session
 const initialState: AuthState = {
   user: null,
-  token: localStorage.getItem('token'),
-  isAuthenticated: !!localStorage.getItem('token'),
+  token: localStorage.getItem("token"),
+  isAuthenticated: !!localStorage.getItem("token"),
   isLoading: false, // if an authentication request is in progress
   error: null,
 };
@@ -39,21 +38,21 @@ export const AuthContext = createContext<AuthContextType>({
 // Reducer pattern: function that takes the current state and an action, and returns the new state
 // Action types
 type AuthAction =
-  | { type: 'AUTH_START' }
-  | { type: 'AUTH_SUCCESS'; payload: { user: User; token: string } }
-  | { type: 'AUTH_FAILURE'; payload: string }
-  | { type: 'AUTH_LOGOUT' };
+  | { type: "AUTH_START" }
+  | { type: "AUTH_SUCCESS"; payload: { user: User; token: string } }
+  | { type: "AUTH_FAILURE"; payload: string }
+  | { type: "AUTH_LOGOUT" };
 
 // Reducer function
 const authReducer = (state: AuthState, action: AuthAction): AuthState => {
   switch (action.type) {
-    case 'AUTH_START':
+    case "AUTH_START":
       return {
         ...state,
         isLoading: true,
         error: null,
       };
-    case 'AUTH_SUCCESS':
+    case "AUTH_SUCCESS":
       return {
         ...state,
         isLoading: false,
@@ -62,7 +61,7 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
         token: action.payload.token,
         error: null,
       };
-    case 'AUTH_FAILURE':
+    case "AUTH_FAILURE":
       return {
         ...state,
         isLoading: false,
@@ -70,7 +69,7 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
         user: null,
         error: action.payload,
       };
-    case 'AUTH_LOGOUT':
+    case "AUTH_LOGOUT":
       return {
         ...state,
         isAuthenticated: false,
@@ -83,8 +82,20 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
   }
 };
 
+// Add a utility function to convert snake_case to camelCase
+const toCamelCase = (obj: any) => {
+  const camelObj: any = {};
+  for (const key in obj) {
+    const camelKey = key.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+    camelObj[camelKey] = obj[key];
+  }
+  return camelObj;
+};
+
 // Provider component
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   // useReducer: hook that is used to manage the state of the component
   // takes in reducer function and initial state
   const [state, dispatch] = useReducer(authReducer, initialState);
@@ -96,19 +107,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const loadUser = async () => {
       if (state.token) {
         try {
-          dispatch({ type: 'AUTH_START' });
+          dispatch({ type: "AUTH_START" });
           const user = await authService.getCurrentUser();
           dispatch({
-            type: 'AUTH_SUCCESS',
-            payload: { user, token: state.token as string },
+            type: "AUTH_SUCCESS",
+            payload: {
+              user: toCamelCase(user), // Convert here
+              token: state.token as string,
+            },
           });
         } catch (error) {
-          console.error('Failed to load user:', error);
-          localStorage.removeItem('token');
-          localStorage.removeItem('refreshToken');
+          console.error("Failed to load user:", error);
+          localStorage.removeItem("token");
+          localStorage.removeItem("refreshToken");
           dispatch({
-            type: 'AUTH_FAILURE',
-            payload: 'Session expired. Please login again.',
+            type: "AUTH_FAILURE",
+            payload: "Session expired. Please login again.",
           });
         }
       }
@@ -120,18 +134,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Login function
   const login = async (credentials: LoginCredentials) => {
     try {
-      dispatch({ type: 'AUTH_START' });
+      dispatch({ type: "AUTH_START" });
       const authResponse = await authService.login(credentials);
       const user = await authService.getCurrentUser();
       dispatch({
-        type: 'AUTH_SUCCESS',
-        payload: { user, token: authResponse.access_token },
+        type: "AUTH_SUCCESS",
+        payload: {
+          user: toCamelCase(user), // Convert here
+          token: authResponse.access_token,
+        },
       });
     } catch (error) {
-      console.error('Login error:', error);
+      console.error("Login error:", error);
       dispatch({
-        type: 'AUTH_FAILURE',
-        payload: 'Invalid email or password',
+        type: "AUTH_FAILURE",
+        payload: "Invalid email or password",
       });
     }
   };
@@ -139,7 +156,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Register function
   const register = async (userData: RegisterData) => {
     try {
-      dispatch({ type: 'AUTH_START' });
+      dispatch({ type: "AUTH_START" });
       await authService.register(userData);
       const authResponse = await authService.login({
         email: userData.email,
@@ -147,14 +164,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       });
       const user = await authService.getCurrentUser();
       dispatch({
-        type: 'AUTH_SUCCESS',
-        payload: { user, token: authResponse.access_token },
+        type: "AUTH_SUCCESS",
+        payload: {
+          user: toCamelCase(user), // Convert here
+          token: authResponse.access_token,
+        },
       });
     } catch (error) {
-      console.error('Register error:', error);
+      console.error("Register error:", error);
       dispatch({
-        type: 'AUTH_FAILURE',
-        payload: 'Registration failed. Please try again.',
+        type: "AUTH_FAILURE",
+        payload: "Registration failed. Please try again.",
       });
     }
   };
@@ -162,7 +182,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Logout function
   const logout = () => {
     authService.logout();
-    dispatch({ type: 'AUTH_LOGOUT' });
+    dispatch({ type: "AUTH_LOGOUT" });
   };
 
   return (
@@ -171,4 +191,3 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     </AuthContext.Provider>
   );
 };
-

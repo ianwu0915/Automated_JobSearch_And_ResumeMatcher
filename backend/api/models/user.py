@@ -1,12 +1,19 @@
 from pydantic import BaseModel, EmailStr, Field
+from humps import camelize
 from typing import Optional
 from datetime import datetime
 import uuid
+
+def to_camel(string):
+    return camelize(string)
 
 class UserCreate(BaseModel):
     email: EmailStr
     full_name: str
     password: str
+    class Config:
+        alias_generator = to_camel
+        populate_by_name = True
 
 class UserInDB(BaseModel):
     user_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
