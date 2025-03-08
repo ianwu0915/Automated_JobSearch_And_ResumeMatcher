@@ -25,8 +25,8 @@ export const resumeService = {
     return response.data;
   },
 
-  async getResumesByUser(userId: string): Promise<Resume[]> {
-    const response = await api.get<Resume[]>(
+  async getResumeByUserId(userId: string): Promise<Resume> {
+    const response = await api.get<Resume>(
       `${RESUME_ENDPOINTS.GET_BY_USER}?user_id=${userId}`
     );
     return response.data;

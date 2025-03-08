@@ -1,43 +1,56 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Button } from '@/components/common/Button';
 import { MatchScore } from '@/components/common/MatchScore';
 import { JobMatch } from '@/types';
 
-interface JobCardProps {
+interface JobDetailProps {
   jobMatch: JobMatch;
 }
 
-export const JobCard: React.FC<JobCardProps> = ({ jobMatch }) => {
-  const { job, matchScore, matchedSkills, missingSkills } = jobMatch;
+export const JobDetail: React.FC<JobDetailProps> = ({ jobMatch }) => {
+  const { job, matchScore, matchedSkills, missingSkills, requiredExperienceYears, resumeExperienceYears } = jobMatch;
 
   // Format the listed time to a readable format
   const formatListedTime = (listedTime: string) => {
     const date = new Date(listedTime);
     return date.toLocaleDateString('en-US', {
-      month: 'short',
+      weekday: 'long',
+      month: 'long',
       day: 'numeric',
       year: 'numeric',
     });
   };
 
-  // Limit the number of skills to display
-  const displayedMatchedSkills = matchedSkills.slice(0, 5);
-  const displayedMissingSkills = missingSkills.slice(0, 3);
-  const hasMoreMatchedSkills = matchedSkills.length > 5;
-  const hasMoreMissingSkills = missingSkills.length > 3;
+  // Calculate experience match percentage
+  const calculateExperienceMatch = () => {
+    if (requiredExperienceYears === 0) return 100; // No experience required = perfect match
+    if (resumeExperienceYears >= requiredExperienceYears) return 100; // Exceeding requirement = perfect match
+    return Math.min(100, Math.round((resumeExperienceYears / requiredExperienceYears) * 100));
+  };
+
+  // Calculate skill match percentage
+  const calculateSkillMatch = () => {
+    const totalRequiredSkills = matchedSkills.length + missingSkills.length;
+    if (totalRequiredSkills === 0) return 0;
+    return Math.round((matchedSkills.length / totalRequiredSkills) * 100);
+  };
+
+  const experienceMatch = calculateExperienceMatch();
+  const skillMatch = calculateSkillMatch();
+
+  const handleApply = () => {
+    window.open(job.applyUrl, '_blank');
+  };
 
   return (
-    <div className="card hover:shadow-lg transition-shadow duration-300 border border-gray-200">
-      <div className="p-6">
+    <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
+      {/* Job Header */}
+      <div className="bg-gray-50 p-6 border-b border-gray-200">
         <div className="flex justify-between items-start">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">
-              <Link to={`/jobs/${job.jobId}`} className="hover:text-primary-600">
-                {job.title}
-              </Link>
-            </h3>
-            <p className="text-sm text-gray-600">{job.company}</p>
-            <div className="flex items-center mt-1 text-sm text-gray-500">
+            <h1 className="text-2xl font-bold text-gray-900">{job.title}</h1>
+            <p className="text-lg text-gray-600">{job.company}</p>
+            <div className="flex items-center mt-2 text-sm text-gray-500">
               <svg
                 className="mr-1 h-4 w-4"
                 fill="none"
@@ -60,75 +73,104 @@ export const JobCard: React.FC<JobCardProps> = ({ jobMatch }) => {
               <span>{job.location}</span>
               <span className="mx-2">•</span>
               <span>{job.workplaceType}</span>
+              <span className="mx-2">•</span>
+              <span>Posted: {formatListedTime(job.listedTime)}</span>
             </div>
           </div>
           <div className="flex flex-col items-end">
-            <div className="mb-1 font-medium text-sm">Match Score</div>
-            <MatchScore score={matchScore} size="md" />
+            <div className="mb-1 font-medium">Overall Match</div>
+            <MatchScore score={matchScore} size="lg" />
           </div>
         </div>
-
         <div className="mt-4">
-          <div className="text-sm font-medium text-gray-700">Matched Skills:</div>
-          <div className="mt-1 flex flex-wrap gap-1">
-            {displayedMatchedSkills.map((skill, index) => (
+          <Button onClick={handleApply} fullWidth>
+            Apply Now
+          </Button>
+        </div>
+      </div>
+
+      {/* Match Details */}
+      <div className="p-6 border-b border-gray-200">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Match Analysis</h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Overall Match */}
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <h3 className="text-sm font-medium text-gray-700">Overall Match</h3>
+            <div className="mt-2 flex items-center">
+              <MatchScore score={matchScore} size="md" />
+              <span className="ml-2 text-sm text-gray-600">
+                {matchScore >= 80 ? 'Excellent' : matchScore >= 60 ? 'Good' : matchScore >= 40 ? 'Fair' : 'Low'}
+              </span>
+            </div>
+          </div>
+          
+          {/* Skills Match */}
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <h3 className="text-sm font-medium text-gray-700">Skills Match</h3>
+            <div className="mt-2 flex items-center">
+              <MatchScore score={skillMatch} size="md" />
+              <span className="ml-2 text-sm text-gray-600">
+                {matchedSkills.length} of {matchedSkills.length + missingSkills.length} skills
+              </span>
+            </div>
+          </div>
+          
+          {/* Experience Match */}
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <h3 className="text-sm font-medium text-gray-700">Experience Match</h3>
+            <div className="mt-2 flex items-center">
+              <MatchScore score={experienceMatch} size="md" />
+              <span className="ml-2 text-sm text-gray-600">
+                {resumeExperienceYears} yrs / {requiredExperienceYears} yrs required
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        {/* Matched Skills */}
+        <div className="mt-6">
+          <h3 className="text-sm font-medium text-gray-700">Matched Skills ({matchedSkills.length})</h3>
+          <div className="mt-2 flex flex-wrap gap-1">
+            {matchedSkills.map((skill, index) => (
               <span
                 key={index}
-                className="px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800"
+                className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800"
               >
                 {skill}
               </span>
             ))}
-            {hasMoreMatchedSkills && (
-              <span className="px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-800">
-                +{matchedSkills.length - 5} more
-              </span>
+            {matchedSkills.length === 0 && (
+              <span className="text-sm text-gray-500">No matched skills found</span>
             )}
           </div>
         </div>
-
-        {displayedMissingSkills.length > 0 && (
-          <div className="mt-3">
-            <div className="text-sm font-medium text-gray-700">Missing Skills:</div>
-            <div className="mt-1 flex flex-wrap gap-1">
-              {displayedMissingSkills.map((skill, index) => (
-                <span
-                  key={index}
-                  className="px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-800"
-                >
-                  {skill}
-                </span>
-              ))}
-              {hasMoreMissingSkills && (
-                <span className="px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-800">
-                  +{missingSkills.length - 3} more
-                </span>
-              )}
-            </div>
+        
+        {/* Missing Skills */}
+        <div className="mt-4">
+          <h3 className="text-sm font-medium text-gray-700">Missing Skills ({missingSkills.length})</h3>
+          <div className="mt-2 flex flex-wrap gap-1">
+            {missingSkills.map((skill, index) => (
+              <span
+                key={index}
+                className="px-2 py-1 rounded-full text-xs bg-red-100 text-red-800"
+              >
+                {skill}
+              </span>
+            ))}
+            {missingSkills.length === 0 && (
+              <span className="text-sm text-gray-500">No missing skills</span>
+            )}
           </div>
-        )}
+        </div>
+      </div>
 
-        <div className="mt-5 pt-4 border-t border-gray-200 flex justify-between items-center">
-          <div className="text-sm text-gray-500">
-            Posted: {formatListedTime(job.listedTime)}
-          </div>
-          <Link
-            to={`/jobs/${job.jobId}`}
-            className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md text-primary-700 bg-primary-50 hover:bg-primary-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-          >
-            View Details
-            <svg
-              className="ml-1 -mr-0.5 h-4 w-4"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </Link>
+      {/* Job Description */}
+      <div className="p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Job Description</h2>
+        <div className="prose prose-sm max-w-none">
+          {/* Render job description - might need to sanitize HTML */}
+          <div dangerouslySetInnerHTML={{ __html: job.description }} />
         </div>
       </div>
     </div>
