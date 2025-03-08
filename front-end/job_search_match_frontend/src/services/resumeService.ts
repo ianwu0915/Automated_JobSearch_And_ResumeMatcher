@@ -18,10 +18,10 @@ export const resumeService = {
     try {
       const response = await api.post<
         ApiResponse<{ resumeId: string; features: any }>
-    >(`${RESUME_ENDPOINTS.UPLOAD}?user_id=${userId}`, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
+      >(`${RESUME_ENDPOINTS.UPLOAD}?user_id=${userId}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
       console.log("response", response);
       return response.data;

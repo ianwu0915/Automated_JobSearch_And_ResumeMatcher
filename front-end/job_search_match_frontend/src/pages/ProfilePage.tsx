@@ -45,9 +45,11 @@ export const ProfilePage: React.FC = () => {
       console.log("handleResumeUpload", file, userId);
       const result = await resumeService.uploadResume(file, userId);
       
+      console.log("result", result);
       // Refetch the resume to get the full object
       const userResume = await resumeService.getResumeByUserId(userId);
       setResume(userResume);
+      console.log("userResume", userResume);
       
       return {
         resumeId: result.data!.resumeId,

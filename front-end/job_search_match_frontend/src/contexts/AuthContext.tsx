@@ -82,16 +82,6 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
   }
 };
 
-// Add a utility function to convert snake_case to camelCase
-const toCamelCase = (obj: any) => {
-  const camelObj: any = {};
-  for (const key in obj) {
-    const camelKey = key.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
-    camelObj[camelKey] = obj[key];
-  }
-  return camelObj;
-};
-
 // Provider component
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   children,
@@ -111,10 +101,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
           const user = await authService.getCurrentUser();
           dispatch({
             type: "AUTH_SUCCESS",
-            payload: {
-              user: toCamelCase(user), // Convert here
-              token: state.token as string,
-            },
+            payload: { user, token: state.token as string },
           });
         } catch (error) {
           console.error("Failed to load user:", error);
@@ -139,10 +126,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       const user = await authService.getCurrentUser();
       dispatch({
         type: "AUTH_SUCCESS",
-        payload: {
-          user: toCamelCase(user), // Convert here
-          token: authResponse.access_token,
-        },
+        payload: { user, token: authResponse.access_token },
       });
     } catch (error) {
       console.error("Login error:", error);
@@ -158,6 +142,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     try {
       dispatch({ type: "AUTH_START" });
       await authService.register(userData);
+
       const authResponse = await authService.login({
         email: userData.email,
         password: userData.password,
@@ -165,10 +150,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       const user = await authService.getCurrentUser();
       dispatch({
         type: "AUTH_SUCCESS",
-        payload: {
-          user: toCamelCase(user), // Convert here
-          token: authResponse.access_token,
-        },
+        payload: { user, token: authResponse.access_token },
       });
     } catch (error) {
       console.error("Register error:", error);
