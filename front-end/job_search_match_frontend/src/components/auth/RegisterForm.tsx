@@ -17,13 +17,13 @@ export const RegisterForm = ({
 }: RegisterFormProps) => {
   const formik = useFormik({
     initialValues: {
-      fullName: '',
+      full_name: '',
       email: '',
       password: '',
-      confirmPassword: '',
+      confirm_password: '',
     },
     validationSchema: Yup.object({
-      fullName: Yup.string()
+      full_name: Yup.string()
         .required('Full name is required'),
       email: Yup.string()
         .email('Invalid email address')
@@ -31,12 +31,12 @@ export const RegisterForm = ({
       password: Yup.string()
         .min(8, 'Password must be at least 8 characters')
         .required('Password is required'),
-      confirmPassword: Yup.string()
+      confirm_password: Yup.string()
         .oneOf([Yup.ref('password')], 'Passwords must match')
         .required('Please confirm your password'),
     }),
     onSubmit: async (values) => {
-      const { confirmPassword, ...registerData } = values;
+      const { confirm_password, ...registerData } = values;
       await onSubmit(registerData);
     },
   });
@@ -45,14 +45,14 @@ export const RegisterForm = ({
     <form onSubmit={formik.handleSubmit} className="space-y-4">
       <FormInput
         label="Full Name"
-        name="fullName"
+        name="full_name"
         type="text"
         placeholder="John Doe"
-        value={formik.values.fullName}
-        onChange={formik.handleChange}
+        value={formik.values.full_name}
+        onChange={formik.handleChange}  
         onBlur={formik.handleBlur}
-        error={formik.errors.fullName}
-        touched={formik.touched.fullName}
+        error={formik.errors.full_name}
+        touched={formik.touched.full_name}
       />
 
       <FormInput
@@ -81,14 +81,14 @@ export const RegisterForm = ({
 
       <FormInput
         label="Confirm Password"
-        name="confirmPassword"
+        name="confirm_password"
         type="password"
         placeholder="********"
-        value={formik.values.confirmPassword}
+        value={formik.values.confirm_password}
         onChange={formik.handleChange}
         onBlur={formik.handleBlur}
-        error={formik.errors.confirmPassword}
-        touched={formik.touched.confirmPassword}
+        error={formik.errors.confirm_password}
+        touched={formik.touched.confirm_password}
       />
 
       {error && (

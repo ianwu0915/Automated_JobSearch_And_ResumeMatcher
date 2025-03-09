@@ -27,7 +27,7 @@ export const ProfilePage: React.FC = () => {
         setIsLoading(true);
         if (state.user) {
           const userResume = await resumeService.getResumeByUserId(
-            state.user.userId
+            state.user.user_id
           );
           setResume(userResume);
         }
@@ -52,9 +52,9 @@ export const ProfilePage: React.FC = () => {
       const userResume = await resumeService.getResumeByUserId(userId);
       setResume(userResume);
       console.log("userResume", userResume);
-      console.log("userResume.resumeId", userResume.resumeId);
+      console.log("userResume.resume_id", userResume.resume_id);
       return {
-        resumeId: userResume.resumeId,
+        resumeId: userResume.resume_id,
         features: userResume.features,
       };
     } catch (err) {
@@ -97,7 +97,7 @@ export const ProfilePage: React.FC = () => {
             <div>
               <h3 className="text-sm font-medium text-gray-500">Full Name</h3>
               <p className="mt-1 text-sm text-gray-900">
-                {state.user?.fullName}
+                {state.user?.full_name}
               </p>
             </div>
             <div>
@@ -120,12 +120,12 @@ export const ProfilePage: React.FC = () => {
 
           {state.user && (
             <ResumeUploader
-              userId={state.user.userId}
+              userId={state.user.user_id}
               onUpload={handleResumeUpload}
               currentResume={
                 resume
                   ? {
-                      resumeId: resume.resumeId,
+                      resumeId: resume.resume_id,
                       fileName: "Your uploaded resume",
                     }
                   : undefined

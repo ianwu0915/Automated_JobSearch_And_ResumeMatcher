@@ -4,103 +4,68 @@ import { AuthResponse } from "@/types";
 
 // Create axios instance
 const api = axios.create({
-  baseURL: "/api", // This will use the proxy set up in vite.config.js
+  baseURL: "/api",
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// Add console.log to verify the instance
-console.log("api instance created:", api);
+// Track an ongoing refresh promise
+let refreshTokenPromise: Promise<string> | null = null;
 
-// Request interceptor for adding auth token and converting data to snake_case
+// Request interceptor
 api.interceptors.request.use(
   (config) => {
-    // Add auth token
-    console.log("api here", api);
-    console.log("config", config);
-
-
     const token = localStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    // Convert request data from camelCase to snake_case
-    if (config.data) {
-      console.log("config.data", config.data);
-      config.data = decamelizeKeys(config.data);
-    }
+    // if (config.data) {
+    //   config.data = decamelizeKeys(config.data);
+    // }
 
-    // Convert URL params if they exist
-    if (config.params) {
-      console.log("config.params", config.params);
-      config.params = decamelizeKeys(config.params);
-    }
+    // if (config.params) {
+    //   config.params = decamelizeKeys(config.params);
+    // }
 
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// Response interceptor for handling token refresh and converting data to camelCase
+// Response interceptor for handling token refresh
 api.interceptors.response.use(
   (response) => {
-    // Convert response data from snake_case to camelCase
     if (response.data) {
-      response.data = camelizeKeys(response.data);
+      // response.data = camelizeKeys(response.data);
     }
-    console.log("response.data", response.data);
     return response;
   },
   async (error: AxiosError) => {
-    const originalRequest = error.config as AxiosRequestConfig & {
-      _retry?: boolean;
-    };
+    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
 
-    // If 401 and not already retrying, attempt to refresh token
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
+      if (!refreshTokenPromise) {
+        refreshTokenPromise = refreshAccessToken();
+      }
+
       try {
-        const refreshToken = localStorage.getItem("refreshToken");
+        const newToken = await refreshTokenPromise;
+        refreshTokenPromise = null; // Reset after refresh
 
-        if (!refreshToken) {
-          // No refresh token available, logout user
-          localStorage.removeItem("token");
-          localStorage.removeItem("refreshToken");
-          window.location.href = "/login";
-          return Promise.reject(error);
-        }
-
-        // Request new access token
-        // Note: We're using axios directly here, not 'api', to avoid the request interceptor
-        // We'll handle the snake_case manually
-        const response = await axios.post<AuthResponse>(
-          "/api/auth/refresh",
-          // Convert to snake_case manually for this special case
-          decamelizeKeys({ refreshToken }),
-          {
-            baseURL: "/api",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        // Convert response data to camelCase manually since we're not using the api instance
-        const data = camelizeKeys(response.data) as AuthResponse;
-        const { access_token } = data;
-
-        localStorage.setItem("token", access_token);
+        // Store new token
+        localStorage.setItem("token", newToken);
 
         // Retry original request with new token
         if (originalRequest.headers) {
-          originalRequest.headers.Authorization = `Bearer ${access_token}`;
+          originalRequest.headers.Authorization = `Bearer ${newToken}`;
         }
         return api(originalRequest);
       } catch (refreshError) {
-        // Refresh token is invalid or expired, logout user
+        refreshTokenPromise = null; // Reset in case of failure
         localStorage.removeItem("token");
         localStorage.removeItem("refreshToken");
         window.location.href = "/login";
@@ -111,5 +76,29 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Function to refresh the token
+async function refreshAccessToken(): Promise<string> {
+  const refreshToken = localStorage.getItem("refreshToken");
+
+  if (!refreshToken) {
+    localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
+    window.location.href = "/login";
+    throw new Error("No refresh token available");
+  }
+
+  const response = await axios.post<AuthResponse>(
+    "/api/auth/refresh",
+    decamelizeKeys({ refreshToken }),
+    {
+      baseURL: "/api",
+      headers: { "Content-Type": "application/json" },
+    }
+  );
+
+  const data = camelizeKeys(response.data) as AuthResponse;
+  return data.access_token;
+}
 
 export default api;

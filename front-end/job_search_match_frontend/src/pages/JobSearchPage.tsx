@@ -29,7 +29,7 @@ export const JobSearchPage: React.FC = () => {
       try {
         setIsLoadingResume(true);
         if (state.user) {
-          const userResume = await resumeService.getResumeByUserId(state.user.userId);
+          const userResume = await resumeService.getResumeByUserId(state.user.user_id);
           setResume(userResume);
         }
       } catch (err) {
@@ -53,7 +53,7 @@ export const JobSearchPage: React.FC = () => {
       // Update userId in search params
       const params = {
         ...searchParams,
-        userId: state.user.userId,
+        user_id: state.user.user_id,
       };
       
       const matches = await searchJobs(params);
@@ -156,10 +156,10 @@ export const JobSearchPage: React.FC = () => {
           <JobSearchForm
             onSubmit={handleSearch}
             isLoading={isSearching}
-            userId={state.user?.userId || ''}
+            userId={state.user?.user_id || ''}
           />
         </div>
       </div>
-    </div>
+    </div>  
   );
 };
