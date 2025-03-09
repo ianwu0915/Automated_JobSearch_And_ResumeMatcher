@@ -31,7 +31,7 @@ function App() {
               {/* Protected routes */}
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/search" element={<JobSearchPage />} />
-              <Route path="/results" element={<JobResultsPage />} />
+              <Route path="/matches" element={<JobResultsPage />} />
               <Route path="/jobs/:jobId" element={<JobDetailPage />} />
 
               {/* Default redirect */}

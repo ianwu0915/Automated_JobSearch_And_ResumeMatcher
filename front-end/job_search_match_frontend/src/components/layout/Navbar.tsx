@@ -57,7 +57,7 @@ export const Navbar: React.FC = () => {
               <div className="relative">
                 <div className="flex items-center">
                   <span className="text-sm text-gray-700 mr-2">
-                    {state.user?.fullName}
+                    {state.user?.full_name}
                   </span>
                   <button
                     onClick={handleLogout}
@@ -160,13 +160,13 @@ export const Navbar: React.FC = () => {
                   <div className="flex-shrink-0">
                     <div className="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center">
                       <span className="text-primary-800 font-medium">
-                        {state.user?.fullName.charAt(0).toUpperCase()}
+                        {state.user?.full_name.charAt(0).toUpperCase()}
                       </span>
                     </div>
                   </div>
                   <div className="ml-3">
                     <div className="text-base font-medium text-gray-800">
-                      {state.user?.fullName}
+                      {state.user?.full_name}
                     </div>
                     <div className="text-sm font-medium text-gray-500">
                       {state.user?.email}
