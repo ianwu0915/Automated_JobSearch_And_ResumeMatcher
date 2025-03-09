@@ -55,7 +55,7 @@ export const JobResultsPage: React.FC = () => {
     
     switch (sortBy) {
       case 'match':
-        sorted = sorted.sort((a, b) => b.matchScore - a.matchScore);
+        sorted = sorted.sort((a, b) => b.match_score - a.match_score);
         break;
       case 'date':
         sorted = sorted.sort((a, b) => 
@@ -160,7 +160,7 @@ export const JobResultsPage: React.FC = () => {
       ) : (
         <div className="space-y-4">
           {sortedMatches.map((jobMatch) => (
-            <JobCard key={jobMatch.jobId} jobMatch={jobMatch} />
+            <JobCard key={jobMatch.job_id} jobMatch={jobMatch} />
           ))}
         </div>
       )}

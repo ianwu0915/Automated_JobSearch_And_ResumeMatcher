@@ -8,7 +8,7 @@ interface JobCardProps {
 }
 
 export const JobCard: React.FC<JobCardProps> = ({ jobMatch }) => {
-  const { job, matchScore, matchedSkills, missingSkills } = jobMatch;
+  const { job, match_score, matched_skills, missing_skills } = jobMatch;
 
   // Format the listed time to a readable format
   const formatListedTime = (listedTime: string) => {
@@ -21,10 +21,10 @@ export const JobCard: React.FC<JobCardProps> = ({ jobMatch }) => {
   };
 
   // Limit the number of skills to display
-  const displayedMatchedSkills = matchedSkills.slice(0, 5);
-  const displayedMissingSkills = missingSkills.slice(0, 3);
-  const hasMoreMatchedSkills = matchedSkills.length > 5;
-  const hasMoreMissingSkills = missingSkills.length > 3;
+  const displayedMatchedSkills = matched_skills.slice(0, 5);
+  const displayedMissingSkills = missing_skills.slice(0, 3);
+  const hasMoreMatchedSkills = matched_skills.length > 5;
+  const hasMoreMissingSkills = missing_skills.length > 3;
 
   return (
     <div className="card hover:shadow-lg transition-shadow duration-300 border border-gray-200">
@@ -64,14 +64,14 @@ export const JobCard: React.FC<JobCardProps> = ({ jobMatch }) => {
           </div>
           <div className="flex flex-col items-end">
             <div className="mb-1 font-medium text-sm">Match Score</div>
-            <MatchScore score={matchScore} size="md" />
+            <MatchScore score={match_score} size="md" />
           </div>
         </div>
 
         <div className="mt-4">
           <div className="text-sm font-medium text-gray-700">Matched Skills:</div>
           <div className="mt-1 flex flex-wrap gap-1">
-            {displayedMatchedSkills.map((skill, index) => (
+            {displayedMatchedSkills.map((skill: any, index: any) => (
               <span
                 key={index}
                 className="px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800"
@@ -81,7 +81,7 @@ export const JobCard: React.FC<JobCardProps> = ({ jobMatch }) => {
             ))}
             {hasMoreMatchedSkills && (
               <span className="px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-800">
-                +{matchedSkills.length - 5} more
+                +{matched_skills.length - 5} more
               </span>
             )}
           </div>
@@ -101,7 +101,7 @@ export const JobCard: React.FC<JobCardProps> = ({ jobMatch }) => {
               ))}
               {hasMoreMissingSkills && (
                 <span className="px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-800">
-                  +{missingSkills.length - 3} more
+                  +{missing_skills.length - 3} more
                 </span>
               )}
             </div>

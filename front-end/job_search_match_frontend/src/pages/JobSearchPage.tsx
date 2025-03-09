@@ -55,6 +55,8 @@ export const JobSearchPage: React.FC = () => {
         ...searchParams,
         user_id: state.user.user_id,
       };
+
+      console.log(params);
       
       const matches = await searchJobs(params);
       

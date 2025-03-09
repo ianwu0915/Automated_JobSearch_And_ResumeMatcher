@@ -12,12 +12,14 @@ export const jobService = {
     // Convert the params to URLSearchParams for query string
     const queryParams = new URLSearchParams();
     queryParams.append('keywords', params.keywords);
-    queryParams.append('location', params.location);
-    params.experienceLevel.forEach(level => queryParams.append('experience_level', level));
-    params.jobType.forEach(type => queryParams.append('job_type', type));
+    queryParams.append('location_name', params.location_name);
+    params.experience_level.forEach(level => queryParams.append('experience', level));
+    params.job_type.forEach(type => queryParams.append('job_type', type));
     params.remote.forEach(remote => queryParams.append('remote', remote));
     queryParams.append('limit', params.limit.toString());
-    queryParams.append('user_id', params.userId);
+    queryParams.append('user_id', params.user_id);
+
+    console.log(queryParams.toString());
     
     const response = await api.get<JobSearchResponse>(
       `${JOB_ENDPOINTS.SEARCH_AND_MATCH}?${queryParams.toString()}`

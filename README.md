@@ -166,6 +166,29 @@ python -m backend.core.database
 - Rate limiting for external API calls
 - Efficient memory usage through Redis caching
 
+## Job Search Parameters"
+
+* **experience**: Experience level required
+    * '1' = Internship
+    * '2' = Entry level
+    * '3' = Associate
+    * '4' = Mid-Senior
+    * '5' = Director
+    * '6' = Executive
+
+* **remote**: Work location type
+    * 1 = On-site
+    * 2 = Remote
+    * 3 = Hybrid
+
+* **job_type**: Employment type
+    * 'F' = Full-time
+    * 'P' = Part-time
+    * 'C' = Contract
+    * 'T' = Temporary
+    * 'I' = Internship
+    * 'V' = Volunteer
+
 ## Future Enhancements
 
 1. **AI Improvements**

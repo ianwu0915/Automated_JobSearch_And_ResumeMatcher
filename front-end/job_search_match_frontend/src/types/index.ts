@@ -81,7 +81,7 @@ export interface JobMatch {
 
 export interface JobSearchParams {
   keywords: string;
-  location: string;
+  location_name: string;
   experience_level: string[];
   job_type: string[];
   remote: string[];

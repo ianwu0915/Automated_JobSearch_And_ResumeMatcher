@@ -1,9 +1,9 @@
-import React from 'react';
-import { useFormik } from 'formik';
-import * as Yup from 'yup';
-import { FormInput } from '@/components/common/FormInput';
-import { Button } from '@/components/common/Button';
-import { JobSearchParams } from '@/types';
+import React from "react";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import { FormInput } from "@/components/common/FormInput";
+import { Button } from "@/components/common/Button";
+import { JobSearchParams } from "@/types";
 
 interface JobSearchFormProps {
   onSubmit: (values: JobSearchParams) => Promise<void>;
@@ -18,17 +18,17 @@ export const JobSearchForm: React.FC<JobSearchFormProps> = ({
 }) => {
   const formik = useFormik<JobSearchParams>({
     initialValues: {
-      keywords: '',
-      location: 'United States',
-      experienceLevel: ['2', '3'], // Mid-level and Senior by default
-      jobType: ['F', 'C'], // Full-time and Contract by default
-      remote: ['2'], // Remote by default
-      limit: 50,
-      userId: userId,
+      keywords: "",
+      location_name: "United States",
+      experience_level: ["2", "3"], // Entry Level and Associate by default
+      job_type: ["F", "C"], // Full-time and Contract by default
+      remote: ["1", "2"], // On-site and Remote by default
+      limit: 5,
+      user_id: userId,
     },
     validationSchema: Yup.object({
-      keywords: Yup.string().required('Keywords are required'),
-      location: Yup.string().required('Location is required'),
+      keywords: Yup.string().required("Keywords are required"),
+      location_name: Yup.string().required("Location is required"),
     }),
     onSubmit: async (values) => {
       await onSubmit(values);
@@ -37,33 +37,35 @@ export const JobSearchForm: React.FC<JobSearchFormProps> = ({
 
   // Experience level options
   const experienceLevels = [
-    { value: '1', label: 'Entry Level' },
-    { value: '2', label: 'Mid Level' },
-    { value: '3', label: 'Senior Level' },
-    { value: '4', label: 'Director' },
-    { value: '5', label: 'Executive' },
+    { value: "1", label: "Internship" },
+    { value: "2", label: "Entry Level" },
+    { value: "3", label: "Associate" },
+    { value: "4", label: "Mid-Senior" },
+    { value: "5", label: "Director" },
+    { value: "6", label: "Executive" },
   ];
 
   // Job type options
   const jobTypes = [
-    { value: 'F', label: 'Full-time' },
-    { value: 'C', label: 'Contract' },
-    { value: 'P', label: 'Part-time' },
-    { value: 'T', label: 'Temporary' },
-    { value: 'I', label: 'Internship' },
+    { value: "F", label: "Full-time" },
+    { value: "P", label: "Part-time" },
+    { value: "C", label: "Contract" },
+    { value: "T", label: "Temporary" },
+    { value: "I", label: "Internship" },
+    { value: "V", label: "Volunteer" },
   ];
 
   // Remote options
   const remoteOptions = [
-    { value: '1', label: 'On-site' },
-    { value: '2', label: 'Remote' },
-    { value: '3', label: 'Hybrid' },
+    { value: "1", label: "On-site" },
+    { value: "2", label: "Remote" },
+    { value: "3", label: "Hybrid" },
   ];
 
   // Handle checkbox changes for multi-select options
   const handleCheckboxChange = (
     e: React.ChangeEvent<HTMLInputElement>,
-    field: 'experienceLevel' | 'jobType' | 'remote'
+    field: "experience_level" | "job_type" | "remote"
   ) => {
     const { checked, value } = e.target;
     const currentValues = [...formik.values[field]];
@@ -97,14 +99,14 @@ export const JobSearchForm: React.FC<JobSearchFormProps> = ({
 
         <FormInput
           label="Location"
-          name="location"
+          name="location_name"
           type="text"
           placeholder="e.g. United States, San Francisco, Remote"
-          value={formik.values.location}
+          value={formik.values.location_name}
           onChange={formik.handleChange}
           onBlur={formik.handleBlur}
-          error={formik.errors.location}
-          touched={formik.touched.location}
+          error={formik.errors.location_name}
+          touched={formik.touched.location_name}
         />
 
         <div>
@@ -114,11 +116,11 @@ export const JobSearchForm: React.FC<JobSearchFormProps> = ({
               <div key={level.value} className="flex items-center">
                 <input
                   id={`experience-${level.value}`}
-                  name="experienceLevel"
+                  name="experience"
                   type="checkbox"
                   value={level.value}
-                  checked={formik.values.experienceLevel.includes(level.value)}
-                  onChange={(e) => handleCheckboxChange(e, 'experienceLevel')}
+                  checked={formik.values.experience_level.includes(level.value)}
+                  onChange={(e) => handleCheckboxChange(e, "experience_level")}
                   className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                 />
                 <label
@@ -142,8 +144,8 @@ export const JobSearchForm: React.FC<JobSearchFormProps> = ({
                   name="jobType"
                   type="checkbox"
                   value={type.value}
-                  checked={formik.values.jobType.includes(type.value)}
-                  onChange={(e) => handleCheckboxChange(e, 'jobType')}
+                  checked={formik.values.job_type.includes(type.value)}
+                  onChange={(e) => handleCheckboxChange(e, "job_type")}
                   className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                 />
                 <label
@@ -168,7 +170,7 @@ export const JobSearchForm: React.FC<JobSearchFormProps> = ({
                   type="checkbox"
                   value={option.value}
                   checked={formik.values.remote.includes(option.value)}
-                  onChange={(e) => handleCheckboxChange(e, 'remote')}
+                  onChange={(e) => handleCheckboxChange(e, "remote")}
                   className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                 />
                 <label
