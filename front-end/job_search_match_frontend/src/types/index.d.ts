@@ -18,6 +18,7 @@ export interface LoginCredentials {
     password: string;
 }
 export interface RegisterData {
+    fullName: string;
     email: string;
     password: string;
 }
@@ -83,4 +84,9 @@ export interface ApiResponse<T> {
 export interface FormError {
     field: string;
     message: string;
+}
+export interface JobSearchResponse {
+    message: string;
+    total_jobs: number;
+    matches: JobMatch[];
 }

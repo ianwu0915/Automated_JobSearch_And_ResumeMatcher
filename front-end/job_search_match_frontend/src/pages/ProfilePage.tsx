@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
-import { resumeService } from '@/services/resumeService';
-import { ResumeUploader } from '@/components/resume/ResumeUploader';
-import { Button } from '@/components/common/Button';
-import { Resume, ResumeFeatures } from '@/types';
-import { Spinner } from '@/components/common/Spinner';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { resumeService } from "@/services/resumeService";
+import { ResumeUploader } from "@/components/resume/ResumeUploader";
+import { Button } from "@/components/common/Button";
+import { Resume } from "@/types";
+import { Spinner } from "@/components/common/Spinner";
 
 export const ProfilePage: React.FC = () => {
   const { state } = useAuth();
@@ -17,7 +17,7 @@ export const ProfilePage: React.FC = () => {
   useEffect(() => {
     // Redirect if not authenticated
     if (!state.isAuthenticated) {
-      navigate('/login');
+      navigate("/login");
       return;
     }
 
@@ -26,11 +26,13 @@ export const ProfilePage: React.FC = () => {
       try {
         setIsLoading(true);
         if (state.user) {
-          const userResume = await resumeService.getResumeByUserId(state.user.userId);
+          const userResume = await resumeService.getResumeByUserId(
+            state.user.userId
+          );
           setResume(userResume);
         }
       } catch (err) {
-        console.error('Error fetching resume:', err);
+        console.error("Error fetching resume:", err);
         // It's okay if the user doesn't have a resume yet
       } finally {
         setIsLoading(false);
@@ -44,26 +46,26 @@ export const ProfilePage: React.FC = () => {
     try {
       console.log("handleResumeUpload", file, userId);
       const result = await resumeService.uploadResume(file, userId);
-      
+
       console.log("result", result);
       // Refetch the resume to get the full object
       const userResume = await resumeService.getResumeByUserId(userId);
       setResume(userResume);
       console.log("userResume", userResume);
-      
+      console.log("userResume.resumeId", userResume.resumeId);
       return {
-        resumeId: result.data!.resumeId,
-        features: result.data!.features
+        resumeId: userResume.resumeId,
+        features: userResume.features,
       };
     } catch (err) {
-      console.error('Error uploading resume:', err);
-      setError('Failed to upload resume. Please try again.');
+      console.error("Error uploading resume:", err);
+      setError("Failed to upload resume. Please try again.");
       throw err;
     }
   };
 
   const handleContinueToSearch = () => {
-    navigate('/search');
+    navigate("/search");
   };
 
   if (isLoading) {
@@ -85,31 +87,37 @@ export const ProfilePage: React.FC = () => {
             Upload your resume to start matching with jobs
           </p>
         </div>
-        
+
         <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
-          <h2 className="text-lg font-medium text-gray-900">Your Information</h2>
-          
+          <h2 className="text-lg font-medium text-gray-900">
+            Your Information
+          </h2>
+
           <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2">
             <div>
               <h3 className="text-sm font-medium text-gray-500">Full Name</h3>
-              <p className="mt-1 text-sm text-gray-900">{state.user?.fullName}</p>
+              <p className="mt-1 text-sm text-gray-900">
+                {state.user?.fullName}
+              </p>
             </div>
             <div>
-              <h3 className="text-sm font-medium text-gray-500">Email Address</h3>
+              <h3 className="text-sm font-medium text-gray-500">
+                Email Address
+              </h3>
               <p className="mt-1 text-sm text-gray-900">{state.user?.email}</p>
             </div>
           </div>
         </div>
-        
+
         <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
           <h2 className="text-lg font-medium text-gray-900 mb-4">Resume</h2>
-          
+
           {error && (
             <div className="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
               {error}
             </div>
           )}
-          
+
           {state.user && (
             <ResumeUploader
               userId={state.user.userId}
@@ -118,13 +126,13 @@ export const ProfilePage: React.FC = () => {
                 resume
                   ? {
                       resumeId: resume.resumeId,
-                      fileName: 'Your uploaded resume',
+                      fileName: "Your uploaded resume",
                     }
                   : undefined
               }
             />
           )}
-          
+
           {resume && (
             <div className="mt-6 flex justify-end">
               <Button onClick={handleContinueToSearch}>
@@ -137,3 +145,5 @@ export const ProfilePage: React.FC = () => {
     </div>
   );
 };
+
+export default ProfilePage;

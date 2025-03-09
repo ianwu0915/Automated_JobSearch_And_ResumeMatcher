@@ -1,6 +1,8 @@
 import api from "./api";
 import { ApiResponse, Resume } from "@/types";
 
+console.log("resumeService module loaded");
+
 const RESUME_ENDPOINTS = {
   UPLOAD: "/resumes/upload",
   GET_BY_USER: "/resumes/user",
@@ -32,9 +34,18 @@ export const resumeService = {
   },
 
   async getResumeByUserId(userId: string): Promise<Resume> {
-    const response = await api.get<Resume>(
-      `${RESUME_ENDPOINTS.GET_BY_USER}?user_id=${userId}`
-    );
+    console.log("getResumeByUserId called with:", userId);
+    // Add this at the bottom of your file
+    console.log("api instance:", api);
+    console.log("Request interceptors:", api.interceptors.request);
+    console.log("Response interceptors:", api.interceptors.response);
+    console.log("api prototype:", Object.getPrototypeOf(api));
+
+    const response = await api.get<Resume>(RESUME_ENDPOINTS.GET_BY_USER, {
+      params: {
+        user_id: userId,
+      },
+    });
     return response.data;
   },
 };

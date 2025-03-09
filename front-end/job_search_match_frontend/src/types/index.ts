@@ -1,10 +1,10 @@
 //Auth Types
 export type User = {
-  userId: string;
+  user_id: string;
   email: string;
-  fullName: string;
-  isActive: boolean;
-  isVerified: boolean;
+  full_name: string;
+  is_active: boolean;
+  is_verified: boolean;
   role: string;
 };
 
@@ -35,11 +35,11 @@ export interface AuthResponse {
 
 // Resume Types
 export interface Resume {
-  resumeId: string;
-  userId: string;
+  resume_id: string;
+  user_id: string;
   features: ResumeFeatures;
-  rawText: string;
-  processedDate: string;
+  raw_text: string;
+  processed_date: string;
 }
 
 export interface ResumeFeatures {
@@ -63,30 +63,30 @@ export interface Job {
 }
 
 export interface JobFeatures {
-  requiredExperienceYears: number;
+  required_experience_years: number;
   skills: string[];
-  wordFrequencies: Record<string, number>;
+  word_frequencies: Record<string, number>;
 }
 
 export interface JobMatch {
-  resumeId: string;
-  jobId: string;
-  matchScore: number;
-  matchedSkills: string[];
-  missingSkills: string[];
-  requiredExperienceYears: number;
-  resumeExperienceYears: number;
+  resume_id: string;
+  job_id: string;
+  match_score: number;
+  matched_skills: string[];
+  missing_skills: string[];
+  required_experience_years: number;
+  resume_experience_years: number;
   job: Job;
 }
 
 export interface JobSearchParams {
   keywords: string;
   location: string;
-  experienceLevel: string[];
-  jobType: string[];
+  experience_level: string[];
+  job_type: string[];
   remote: string[];
   limit: number;
-  userId: string;
+  user_id: string;
 }
 
 // API Types
