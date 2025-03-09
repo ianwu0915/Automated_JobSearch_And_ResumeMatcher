@@ -1,30 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';  
 import { Button } from '@/components/common/Button';
 import { JobCard } from '@/components/jobs/JobCard';
 import { Spinner } from '@/components/common/Spinner';
 import { useAuth } from '@/hooks/useAuth';
-import { useJobSearch } from '@/hooks/useJobSearch';
-import { JobMatch, JobSearchParams } from '@/types';
+import { useJobSearch } from '@/contexts/JobSearchContext';
+import { JobMatch} from '@/types';
 
 // Sorting options
 type SortOption = 'match' | 'date' | 'company';
 
 export const JobResultsPage: React.FC = () => {
-  const location = useLocation();
   const navigate = useNavigate();
   const { state: authState } = useAuth();
-  const { matches, searchJobs, isLoading } = useJobSearch();
+  const { matches, isLoading, error: searchError, lastSearchParams, searchJobs } = useJobSearch();
   
   const [sortedMatches, setSortedMatches] = useState<JobMatch[]>([]);
   const [sortBy, setSortBy] = useState<SortOption>('match');
   const [error, setError] = useState<string | null>(null);
   
-  // Get matches from location state or from hook
-  const locationState = location.state as { 
-    matches: JobMatch[]; 
-    searchParams: JobSearchParams;
-  } | null;
+  useEffect(() => {
+    if (searchError) {
+      setError(searchError);
+    }
+  }, [searchError]);
   
   useEffect(() => {
     // Redirect if not authenticated
@@ -33,19 +32,15 @@ export const JobResultsPage: React.FC = () => {
       return;
     }
     
-    // If no matches in location state and not already loading, redirect to search
-    if (!locationState?.matches && !isLoading && matches.length === 0) {
+    // If no matches and not loading, redirect to search
+    if (matches.length === 0 && !isLoading) {
       navigate('/search');
       return;
     }
     
-    // Set matches from location state
-    if (locationState?.matches && matches.length === 0) {
-      setSortedMatches(locationState.matches);
-    } else if (matches.length > 0) {
-      setSortedMatches(matches);
-    }
-  }, [authState.isAuthenticated, locationState, matches, isLoading, navigate]);
+    // Set matches from context
+    setSortedMatches(matches);
+  }, [authState.isAuthenticated, matches, isLoading, navigate]);
   
   // Effect for sorting matches
   useEffect(() => {
@@ -78,13 +73,13 @@ export const JobResultsPage: React.FC = () => {
   
   // Handle rerunning the same search
   const handleRefreshSearch = async () => {
-    if (!locationState?.searchParams) {
+    if (!lastSearchParams) {
       navigate('/search');
       return;
     }
     
     try {
-      await searchJobs(locationState.searchParams);
+      await searchJobs(lastSearchParams);
     } catch (err) {
       console.error('Error refreshing search:', err);
       setError('Failed to refresh search results. Please try again.');

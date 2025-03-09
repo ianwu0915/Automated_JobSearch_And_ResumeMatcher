@@ -5,6 +5,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { JobSearchProvider } from "@/contexts/JobSearchContext";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { LoginPage } from "@/pages/LoginPage";
@@ -17,9 +18,10 @@ import { JobDetailPage } from "@/pages/JobDetailPage";
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <div className="flex flex-col min-h-screen bg-gray-50">
-          <Navbar />
+      <JobSearchProvider>
+        <Router>
+          <div className="flex flex-col min-h-screen bg-gray-50">
+            <Navbar />
           <main className="flex-grow">
             <Routes>
               {/* Public routes */}
@@ -36,10 +38,11 @@ function App() {
               <Route path="/" element={<Navigate to="/profile" replace />} />
               <Route path="*" element={<Navigate to="/profile" replace />} />
             </Routes>
-          </main>
+          </main> 
           <Footer />
         </div>
       </Router>
+    </JobSearchProvider>
     </AuthProvider>
   );
 }

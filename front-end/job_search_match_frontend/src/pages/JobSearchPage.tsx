@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { useJobSearch } from '@/hooks/useJobSearch';
+import { useJobSearch } from '@/contexts/JobSearchContext';
 import { resumeService } from '@/services/resumeService';
 import { JobSearchForm } from '@/components/jobs/JobSearchForm';
 import { Button } from '@/components/common/Button';
@@ -10,12 +10,19 @@ import { Spinner } from '@/components/common/Spinner';
 
 export const JobSearchPage: React.FC = () => {
   const { state } = useAuth();
-  const { searchJobs, isLoading: isSearching } = useJobSearch();
+  const { searchJobs, isLoading: isSearching, error: searchError } = useJobSearch();
   const navigate = useNavigate();
   
   const [resume, setResume] = useState<Resume | null>(null);
   const [isLoadingResume, setIsLoadingResume] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Set error if there's a search error
+    if (searchError) {
+      setError(searchError);
+    }
+  }, [searchError]);
 
   useEffect(() => {
     // Redirect if not authenticated
@@ -60,13 +67,12 @@ export const JobSearchPage: React.FC = () => {
       
       const matches = await searchJobs(params);
       
-      // Navigate to results page with search params as state
-      navigate('/results', { 
-        state: { 
-          matches,
-          searchParams: params,
-        } 
-      });
+      // Navigate to results page (no need to pass state now)
+      if (matches && matches.length > 0) {
+        navigate('/results');
+      } else {
+        setError('No matching jobs found. Try adjusting your search criteria.');
+      }
     } catch (err) {
       console.error('Error searching jobs:', err);
       setError('Failed to search jobs. Please try again.');
