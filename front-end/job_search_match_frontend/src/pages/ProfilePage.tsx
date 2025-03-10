@@ -78,8 +78,7 @@ export const ProfilePage: React.FC = () => {
 
   console.log("state.user", state.user);
   return (
-    // <div className="max-w-3xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
-    <div className="w-full mx-auto py-10 px-4 sm:px-6 lg:px-8">
+    <div className="max-w-3xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
       <div className="bg-white shadow overflow-hidden sm:rounded-lg">
         <div className="px-4 py-5 sm:px-6">
           <h1 className="text-2xl font-semibold text-gray-900">Profile</h1>

@@ -1,5 +1,5 @@
 import api from './api';
-import { Job, JobSearchParams, JobSearchResponse, JobMatchCardType } from '@/types';
+import { Job, JobSearchParams, JobSearchResponse, JobMatch, JobMatchHistoryResponse } from '@/types';
 
 const JOB_ENDPOINTS = {
   SEARCH_AND_MATCH: '/jobs/search_and_match',
@@ -8,7 +8,7 @@ const JOB_ENDPOINTS = {
 };
 
 export const jobService = {
-  async searchAndMatchJobs(params: JobSearchParams): Promise<{ matches: JobMatchCardType[] }> {
+  async searchAndMatchJobs(params: JobSearchParams): Promise<{ matches: JobMatch[] }> {
     // Convert the params to URLSearchParams for query string
     const queryParams = new URLSearchParams();
     queryParams.append('keywords', params.keywords);
@@ -34,13 +34,13 @@ export const jobService = {
     return response.data;
   },
   
-  async getMatchHistory(userId: string, limit: number = 50, minScore: number = 50): Promise<{ matches: JobMatchCardType[] }> {
+  async getMatchHistory(userId: string, limit: number = 50, minScore: number = 50): Promise<JobMatchHistoryResponse> {
     const queryParams = new URLSearchParams();
     queryParams.append('user_id', userId);
     queryParams.append('limit', limit.toString());
     queryParams.append('min_score', minScore.toString());
     
-    const response = await api.get<{ matches: JobMatchCardType[] }>(
+    const response = await api.get<JobMatchHistoryResponse>(
       `${JOB_ENDPOINTS.GET_MATCH_HISTORY}?${queryParams.toString()}`
     );
     

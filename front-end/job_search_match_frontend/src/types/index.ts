@@ -126,5 +126,10 @@ export interface FormError {
 export interface JobSearchResponse {
   message: string;
   total_jobs: number;
+  matches: JobMatch[];
+}
+
+export interface JobMatchHistoryResponse {
+  message: string;
   matches: JobMatchCardType[];
 }

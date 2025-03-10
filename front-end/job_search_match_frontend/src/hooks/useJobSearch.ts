@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { JobMatch, JobSearchParams } from '@/types';
+import { JobMatch, JobSearchParams, JobMatchCardType } from '@/types';
 import { jobService } from '@/services/jobService';
 
 export const useJobSearch = () => {
   const [matches, setMatches] = useState<JobMatch[]>([]);
+  const [matchHistory, setMatchHistory] = useState<JobMatchCardType[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [totalJobs, setTotalJobs] = useState<number>(0);
@@ -35,7 +36,7 @@ export const useJobSearch = () => {
       
       const response = await jobService.getMatchHistory(userId, limit, minScore);
       
-      setMatches(response.matches);
+      setMatchHistory(response.matches);
       setTotalJobs(response.matches.length);
       
       return response.matches;
@@ -50,6 +51,7 @@ export const useJobSearch = () => {
 
   return {
     matches,
+    matchHistory,
     totalJobs,
     isLoading,
     error,
