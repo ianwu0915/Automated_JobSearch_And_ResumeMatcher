@@ -79,6 +79,24 @@ export interface JobMatch {
   job: Job;
 }
 
+export interface JobMatchCardType {
+  id: string;
+  apply_url: string;
+  company: string;
+  created_at: string;
+  job_id: string;
+  listed_time: string;
+  location: string;
+  workplace_type: string;
+  match_score: number;
+  matched_skills: string[];
+  missing_skills: string[];
+  required_experience_years: number;
+  resume_experience_years: number;
+  resume_id: string;
+  title: string;
+}
+
 export interface JobSearchParams {
   keywords: string;
   location_name: string;

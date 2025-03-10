@@ -66,7 +66,7 @@ class MatchRepository:
         """Get all match results for a resume, ordered by match score"""
         try:
             query = """
-            SELECT m.*, j.title, j.company, j.location, j.apply_url
+            SELECT m.*, j.title, j.company, j.location, j.apply_url, j.listed_time, j.workplace_type
             FROM match_results m
             JOIN jobs j ON m.job_id = j.job_id
             WHERE m.resume_id = %s AND m.match_score >= %s

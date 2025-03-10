@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { jobService } from "@/services/jobService";
 import { JobMatch } from "@/types";
-import { JobCard } from "@/components/jobs/JobCard";
+import { JobMatchCard } from "@/components/jobs/JobMatchCard";
 
 export const JobMatchedPage: React.FC = () => {
   const navigate = useNavigate();
@@ -52,7 +52,7 @@ export const JobMatchedPage: React.FC = () => {
           ) : (
             <div className="space-y-4">
               {matches && matches.map((match) => (
-                <JobCard key={match.job_id} jobMatch={match} />
+                <JobMatchCard key={match.job_id} jobMatch={match} />
               ))}
             </div>
           )}
