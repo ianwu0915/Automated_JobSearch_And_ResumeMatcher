@@ -14,7 +14,7 @@ import { ProfilePage } from "@/pages/ProfilePage";
 import { JobSearchPage } from "@/pages/JobSearchPage";
 import { JobResultsPage } from "@/pages/JobResultsPage";
 import { JobDetailPage } from "@/pages/JobDetailPage";
-
+import { JobMatchedPage } from "@/pages/JobMatchedPage";
 function App() {
   return (
     <AuthProvider>
@@ -31,7 +31,8 @@ function App() {
               {/* Protected routes */}
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/search" element={<JobSearchPage />} />
-              <Route path="/matches" element={<JobResultsPage />} />
+              <Route path="/search_results" element={<JobResultsPage />} />
+              <Route path="/matches" element={<JobMatchedPage />} />
               <Route path="/jobs/:jobId" element={<JobDetailPage />} />
 
               {/* Default redirect */}

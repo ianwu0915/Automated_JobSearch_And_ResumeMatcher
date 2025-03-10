@@ -10,7 +10,7 @@ import { Spinner } from '@/components/common/Spinner';
 
 export const JobSearchPage: React.FC = () => {
   const { state } = useAuth();
-  const { searchJobs, isLoading: isSearching, error: searchError } = useJobSearch();
+  const { searchJobs, isLoading: isSearching, error: searchError } = useJobSearch(); // 1. Get the states and searchJobs function from the context
   const navigate = useNavigate();
   
   const [resume, setResume] = useState<Resume | null>(null);
@@ -69,7 +69,7 @@ export const JobSearchPage: React.FC = () => {
       
       if (matches && matches.length > 0) {
         console.log("Navigating to results page");
-        navigate('/matches');
+        navigate('/search_results');
       } else {
         setError('No matching jobs found. Try adjusting your search criteria.');
       }

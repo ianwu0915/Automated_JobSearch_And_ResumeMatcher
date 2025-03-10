@@ -32,11 +32,11 @@ export const JobResultsPage: React.FC = () => {
       return;
     }
     
-    // If no matches and not loading, redirect to search
-    if (matches.length === 0 && !isLoading) {
-      navigate('/search');
-      return;
-    }
+    // // If no matches and not loading, redirect to search
+    // if (matches.length === 0 && !isLoading) {
+    //   navigate('/search');
+    //   return;
+    // }
     
     console.log("Matches:", matches);
     // Set matches from context
