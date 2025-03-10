@@ -153,6 +153,7 @@ async def get_job(job_id: str):
     """
     try:
         # Try to get from cache/database
+        # print("Getting job by id", job_id)
         job = await job_service.get_job_by_id(job_id)
         if not job:
             # If not found, fetch from LinkedIn

@@ -54,7 +54,7 @@ export const JobResultsPage: React.FC = () => {
         break;
       case 'date':
         sorted = sorted.sort((a, b) => 
-          new Date(b.job.listedTime).getTime() - new Date(a.job.listedTime).getTime()
+          new Date(b.job.listed_time).getTime() - new Date(a.job.listed_time).getTime()
         );
         break;
       case 'company':

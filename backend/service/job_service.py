@@ -272,15 +272,18 @@ class JobService:
 
     async def get_job_by_id(self, job_id: str) -> Dict:
         """Get job details by ID"""
+        print(f"Getting job by ID: {job_id}")
         try:
             # Check cache first
-            cached_job = await self.get_cached_job(job_id)
-            if cached_job:
-                return cached_job
+            # cached_job = await self.get_cached_job(job_id)
+            # if cached_job:
+            #     print(f"Returning cached job: {cached_job}")
+            #     return cached_job
             
             # Check database 
             db_job = await self.job_repo.get_job_by_id(job_id)
             if db_job:
+                print(f"Returning database job: {db_job}")
                 return db_job
                 
             # If not found, fetch from LinkedIn API

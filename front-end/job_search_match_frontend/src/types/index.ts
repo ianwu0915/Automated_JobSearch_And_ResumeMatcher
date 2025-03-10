@@ -43,23 +43,23 @@ export interface Resume {
 }
 
 export interface ResumeFeatures {
-  workExperienceYears: number;
+  work_experience_years: number;
   skills: string[];
-  wordFrequencies: Record<string, number>;
+  word_frequencies: Record<string, number>;
 }
 
 // Job Types
 export interface Job {
-  jobId: string;
+  job_id: string;
   title: string;
   company: string;
   location: string;
-  workplaceType: string;
-  listedTime: string;
-  applyUrl: string;
+  workplace_type: string;
+  listed_time: string;
+  apply_url: string;  
   description: string;
   features: JobFeatures;
-  processedDate: string;
+  processed_date: string;
 }
 
 export interface JobFeatures {
@@ -69,6 +69,10 @@ export interface JobFeatures {
 }
 
 export interface JobMatch {
+  id: number;
+  apply_url: string;
+  company: string;
+  title: string;
   resume_id: string;
   job_id: string;
   match_score: number;
@@ -76,6 +80,8 @@ export interface JobMatch {
   missing_skills: string[];
   required_experience_years: number;
   resume_experience_years: number;
+  location: string;
+  created_at: string;
   job: Job;
 }
 

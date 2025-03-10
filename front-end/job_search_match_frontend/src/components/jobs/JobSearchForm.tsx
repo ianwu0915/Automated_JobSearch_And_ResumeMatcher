@@ -183,6 +183,20 @@ export const JobSearchForm: React.FC<JobSearchFormProps> = ({
             ))}
           </div>
         </div>
+
+        <div>
+          <label className="form-label">Number of Jobs</label>
+          <input
+            type="number"
+            name="limit"
+            min="1"
+            max="100"
+            value={formik.values.limit}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+          />
+        </div>
       </div>
 
       <Button

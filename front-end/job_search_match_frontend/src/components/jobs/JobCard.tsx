@@ -32,7 +32,7 @@ export const JobCard: React.FC<JobCardProps> = ({ jobMatch }) => {
         <div className="flex justify-between items-start">
           <div>
             <h3 className="text-lg font-semibold text-gray-900">
-              <Link to={`/jobs/${job.jobId}`} className="hover:text-primary-600">
+              <Link to={`/jobs/${job.job_id}`} className="hover:text-primary-600">
                 {job.title}
               </Link>
             </h3>
@@ -59,7 +59,7 @@ export const JobCard: React.FC<JobCardProps> = ({ jobMatch }) => {
               </svg>
               <span>{job.location}</span>
               <span className="mx-2">•</span>
-              <span>{job.workplaceType}</span>
+              <span>{job.workplace_type}</span>
             </div>
           </div>
           <div className="flex flex-col items-end">
@@ -110,10 +110,10 @@ export const JobCard: React.FC<JobCardProps> = ({ jobMatch }) => {
 
         <div className="mt-5 pt-4 border-t border-gray-200 flex justify-between items-center">
           <div className="text-sm text-gray-500">
-            Posted: {formatListedTime(job.listedTime)}
+            Posted: {formatListedTime(job.listed_time)}
           </div>
           <Link
-            to={`/jobs/${job.jobId}`}
+            to={`/jobs/${job.job_id}`}
             className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md text-primary-700 bg-primary-50 hover:bg-primary-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
           >
             View Details

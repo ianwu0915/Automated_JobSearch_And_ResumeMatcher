@@ -67,9 +67,9 @@ export const JobSearchPage: React.FC = () => {
       
       const matches = await searchJobs(params);
       
-      // Navigate to results page (no need to pass state now)
       if (matches && matches.length > 0) {
-        navigate('/results');
+        console.log("Navigating to results page");
+        navigate('/matches');
       } else {
         setError('No matching jobs found. Try adjusting your search criteria.');
       }

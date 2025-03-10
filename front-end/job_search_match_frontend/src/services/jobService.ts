@@ -16,7 +16,7 @@ export const jobService = {
     params.experience_level.forEach(level => queryParams.append('experience', level));
     params.job_type.forEach(type => queryParams.append('job_type', type));
     params.remote.forEach(remote => queryParams.append('remote', remote));
-    queryParams.append('limit', params.limit.toString());
+    queryParams.append('limit', params.limit.toString() || '10');
     queryParams.append('user_id', params.user_id);
 
     console.log(queryParams.toString());
@@ -29,6 +29,7 @@ export const jobService = {
   },
   
   async getJobById(jobId: string): Promise<Job> {
+    console.log("Getting job by id", jobId);
     const response = await api.get<Job>(`${JOB_ENDPOINTS.GET_JOB}/${jobId}`);
     return response.data;
   },

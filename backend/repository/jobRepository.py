@@ -99,6 +99,8 @@ class JobRepository:
         """Get job by ID"""
         try:
             query = "SELECT * FROM jobs WHERE job_id = %s"
+            # print(f"Getting job by ID: {job_id}")
+            print(f"Query: {query}")
             result = await execute_query(query, (job_id,), fetch_one=True)
             
             if result:

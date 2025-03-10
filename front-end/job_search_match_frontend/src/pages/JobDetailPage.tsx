@@ -37,20 +37,22 @@ export const JobDetailPage: React.FC = () => {
           throw new Error('User not found');
         }
         
-        const resume = await resumeService.getResumeByUserId(state.user.userId);
+        const resume = await resumeService.getResumeByUserId(state.user.user_id);
         if (!resume) {
           navigate('/profile');
           return;
         }
         
         // Get job details
+        console.log("Getting job detailsby ID:", jobId);
         const job = await jobService.getJobById(jobId);
-        
+        console.log("Job details:", job);
         // Get match history to find this job's match score
-        const matchHistory = await jobService.getMatchHistory(state.user.userId);
-        
+        console.log("Getting match history for user:", state.user.user_id);
+        const matchHistory = await jobService.getMatchHistory(state.user.user_id);
+        console.log("Match history:", matchHistory);
         // Find this job in match history
-        const match = matchHistory.matches.find(m => m.jobId === jobId);
+        const match = matchHistory.matches.find(m => m.job_id === jobId);
         
         if (match) {
           // Use existing match data
@@ -59,14 +61,20 @@ export const JobDetailPage: React.FC = () => {
           // If job not found in match history, create a temporary match object
           // This is not ideal but allows viewing job details
           setJobMatch({
-            resumeId: resume.resumeId,
-            jobId: job.jobId,
-            matchScore: 0,
-            matchedSkills: [],
-            missingSkills: job.features.skills,
-            requiredExperienceYears: job.features.requiredExperienceYears,
-            resumeExperienceYears: resume.features.workExperienceYears,
-            job: job
+            resume_id: resume.resume_id,
+            job_id: job.job_id,
+            match_score: 0, 
+            matched_skills: [],
+            missing_skills: job.features.skills,
+            required_experience_years: job.features.required_experience_years,
+            resume_experience_years: resume.features.work_experience_years, 
+            job: job,
+            title: job.title,
+            company: job.company,
+            location: job.location,
+            created_at: new Date().toISOString(),
+            apply_url: job.apply_url,
+            id: 0,
           });
           
           setError('This job was not in your match results. Match score may not be accurate.');
@@ -113,7 +121,7 @@ export const JobDetailPage: React.FC = () => {
     <div className="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
       <div className="mb-6 flex items-center justify-between">
         <Link
-          to="/results"
+          to="/matches"
           className="inline-flex items-center text-sm font-medium text-primary-600 hover:text-primary-500"
         >
           <svg
