@@ -1,23 +1,34 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { MatchScore } from '@/components/common/MatchScore';
-import { JobMatchCardType } from '@/types';
+import React from "react";
+import { Link } from "react-router-dom";
+import { MatchScore } from "@/components/common/MatchScore";
+import { JobMatchCardType } from "@/types";
 
 interface JobMatchCardProps {
   jobMatch: JobMatchCardType;
 }
 
 export const JobMatchCard: React.FC<JobMatchCardProps> = ({ jobMatch }) => {
-  const { job_id, match_score, matched_skills, missing_skills, title, company, location, apply_url, listed_time, workplace_type } = jobMatch;
+  const {
+    job_id,
+    match_score,
+    matched_skills,
+    missing_skills,
+    title,
+    company,
+    location,
+    apply_url,
+    listed_time,
+    workplace_type,
+  } = jobMatch;
   console.log("Job Match details from JobCard:", jobMatch);
 
   // Format the listed time to a readable format
   const formatListedTime = (listedTime: string) => {
     const date = new Date(listedTime);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     });
   };
 
@@ -70,7 +81,9 @@ export const JobMatchCard: React.FC<JobMatchCardProps> = ({ jobMatch }) => {
         </div>
 
         <div className="mt-4">
-          <div className="text-sm font-medium text-gray-700">Matched Skills:</div>
+          <div className="text-sm font-medium text-gray-700">
+            Matched Skills:
+          </div>
           <div className="mt-1 flex flex-wrap gap-1">
             {displayedMatchedSkills.map((skill: any, index: any) => (
               <span
@@ -90,7 +103,9 @@ export const JobMatchCard: React.FC<JobMatchCardProps> = ({ jobMatch }) => {
 
         {displayedMissingSkills.length > 0 && (
           <div className="mt-3">
-            <div className="text-sm font-medium text-gray-700">Missing Skills:</div>
+            <div className="text-sm font-medium text-gray-700">
+              Missing Skills:
+            </div>
             <div className="mt-1 flex flex-wrap gap-1">
               {displayedMissingSkills.map((skill, index) => (
                 <span
@@ -113,23 +128,46 @@ export const JobMatchCard: React.FC<JobMatchCardProps> = ({ jobMatch }) => {
           <div className="text-sm text-gray-500">
             Posted: {formatListedTime(listed_time)}
           </div>
-          <Link
-            to={`/jobs/${job_id}`}
-            className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md text-primary-700 bg-primary-50 hover:bg-primary-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-          >
-            View Details
-            <svg
-              className="ml-1 -mr-0.5 h-4 w-4"
-              fill="currentColor"
-              viewBox="0 0 20 20"
+          <div className="flex gap-2">
+            <a
+              href={apply_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
             >
-              <path
-                fillRule="evenodd"
-                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </Link>
+              Quick Apply
+              <svg
+                className="ml-1 -mr-0.5 h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 7l5 5m0 0l-5 5m5-5H6"
+                />
+              </svg>
+            </a>
+            <Link
+              to={`/jobs/${job_id}`}
+              className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md text-primary-700 bg-primary-50 hover:bg-primary-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+            >
+              View Details
+              <svg
+                className="ml-1 -mr-0.5 h-4 w-4"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </Link>
+          </div>
         </div>
       </div>
     </div>
