@@ -2,13 +2,13 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { jobService } from "@/services/jobService";
-import { JobMatch } from "@/types";
+import { JobMatchCardType } from "@/types";
 import { JobMatchCard } from "@/components/jobs/JobMatchCard";
 
 export const JobMatchedPage: React.FC = () => {
   const navigate = useNavigate();
   const { state } = useAuth();
-  const [matches, setMatches] = useState<JobMatch[]>([]);
+  const [matches, setMatches] = useState<JobMatchCardType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,6 +23,7 @@ export const JobMatchedPage: React.FC = () => {
         setIsLoading(true);
         const response = await jobService.getMatchHistory(state.user!.user_id, 20, 50);
         console.log("response", response.matches);
+        console.log("response.matches[0]", response.matches[0]);
         setMatches(response.matches);
       } catch (err) {
         console.error("Error fetching matches:", err);
@@ -51,8 +52,8 @@ export const JobMatchedPage: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {matches && matches.map((match) => (
-                <JobMatchCard key={match.job_id} jobMatch={match} />
+              {matches.length > 0 && matches.map((match) => (
+                <JobMatchCard key={match.job_id} jobMatchCardType={{...match}} />
               ))}
             </div>
           )}

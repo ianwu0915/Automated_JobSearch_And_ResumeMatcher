@@ -68,6 +68,7 @@ export interface JobFeatures {
   word_frequencies: Record<string, number>;
 }
 
+// For current Search Results
 export interface JobMatch {
   resume_id: string;
   job_id: string;
@@ -79,6 +80,7 @@ export interface JobMatch {
   job: Job;
 }
 
+// For Job Match History
 export interface JobMatchCardType {
   id: string;
   apply_url: string;
@@ -124,5 +126,5 @@ export interface FormError {
 export interface JobSearchResponse {
   message: string;
   total_jobs: number;
-  matches: JobMatch[];
+  matches: JobMatchCardType[];
 }

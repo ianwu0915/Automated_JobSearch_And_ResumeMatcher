@@ -4,10 +4,10 @@ import { MatchScore } from "@/components/common/MatchScore";
 import { JobMatchCardType } from "@/types";
 
 interface JobMatchCardProps {
-  jobMatch: JobMatchCardType;
+  jobMatchCardType: JobMatchCardType;
 }
 
-export const JobMatchCard: React.FC<JobMatchCardProps> = ({ jobMatch }) => {
+export const JobMatchCard: React.FC<JobMatchCardProps> = ({ jobMatchCardType }) => {
   const {
     job_id,
     match_score,
@@ -19,8 +19,7 @@ export const JobMatchCard: React.FC<JobMatchCardProps> = ({ jobMatch }) => {
     apply_url,
     listed_time,
     workplace_type,
-  } = jobMatch;
-  console.log("Job Match details from JobCard:", jobMatch);
+  } = jobMatchCardType;
 
   // Format the listed time to a readable format
   const formatListedTime = (listedTime: string) => {
