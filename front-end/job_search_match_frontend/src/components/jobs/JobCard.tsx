@@ -9,6 +9,7 @@ interface JobCardProps {
 
 export const JobCard: React.FC<JobCardProps> = ({ jobMatch }) => {
   const { job, match_score, matched_skills, missing_skills } = jobMatch;
+  console.log("Job Match details from JobCard:", jobMatch);
 
   // Format the listed time to a readable format
   const formatListedTime = (listedTime: string) => {

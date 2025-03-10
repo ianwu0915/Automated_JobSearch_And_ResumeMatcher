@@ -1,15 +1,17 @@
 import React from 'react';
 import { Button } from '@/components/common/Button';
 import { MatchScore } from '@/components/common/MatchScore';
-import { JobMatch } from '@/types';
+import { JobMatch, Job } from '@/types';
 
 interface JobDetailProps {
   jobMatch: JobMatch;
+  job: Job;
 }
 
-export const JobDetail: React.FC<JobDetailProps> = ({ jobMatch }) => {
-  const { job, match_score, matched_skills, missing_skills, required_experience_years, resume_experience_years } = jobMatch;
+export const JobDetail: React.FC<JobDetailProps> = ({ jobMatch, job }) => {
   console.log("Job Match details from JobDetail:", jobMatch);
+  const { match_score, matched_skills, missing_skills, required_experience_years, resume_experience_years } = jobMatch;
+  console.log("Job details from JobDetail:", job);
 
   // Format the listed time to a readable format
   const formatListedTime = (listedTime: string) => {
@@ -49,8 +51,8 @@ export const JobDetail: React.FC<JobDetailProps> = ({ jobMatch }) => {
       <div className="bg-gray-50 p-6 border-b border-gray-200">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{jobMatch.title}</h1>
-            <p className="text-lg text-gray-600">{jobMatch.company}</p>
+            <h1 className="text-2xl font-bold text-gray-900">{job.title}</h1>
+            <p className="text-lg text-gray-600">{job.company}</p>
             <div className="flex items-center mt-2 text-sm text-gray-500">
               <svg
                 className="mr-1 h-4 w-4"
@@ -71,11 +73,11 @@ export const JobDetail: React.FC<JobDetailProps> = ({ jobMatch }) => {
                   d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                 />
               </svg>
-              <span>{jobMatch.location}</span>
+              <span>{job.location}</span>
               <span className="mx-2">•</span>
-              {/* <span>{jobMatch.job.workplace_type}</span> */}
+              <span>{job.workplace_type}</span>
               <span className="mx-2">•</span>
-              {/* <span>Posted: {formatListedTime(jobMatch.job.listed_time)}</span> */}
+              <span>Posted: {formatListedTime(job.listed_time)}</span>
             </div>
           </div>
           <div className="flex flex-col items-end"> 
@@ -171,7 +173,7 @@ export const JobDetail: React.FC<JobDetailProps> = ({ jobMatch }) => {
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Job Description</h2>
         <div className="prose prose-sm max-w-none">
           {/* Render job description - might need to sanitize HTML */}
-          {/* <div dangerouslySetInnerHTML={{ __html: job.description }} /> */}
+          <div dangerouslySetInnerHTML={{ __html: job.description }} />
         </div>
       </div>
     </div>

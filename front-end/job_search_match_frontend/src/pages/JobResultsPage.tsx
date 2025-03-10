@@ -38,6 +38,7 @@ export const JobResultsPage: React.FC = () => {
       return;
     }
     
+    console.log("Matches:", matches);
     // Set matches from context
     setSortedMatches(matches);
   }, [authState.isAuthenticated, matches, isLoading, navigate]);

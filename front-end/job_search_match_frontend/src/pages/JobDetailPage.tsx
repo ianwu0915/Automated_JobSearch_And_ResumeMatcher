@@ -1,61 +1,67 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { JobDetail } from '@/components/jobs/JobDetail';
-import { Spinner } from '@/components/common/Spinner';
-import { useAuth } from '@/hooks/useAuth';
-import { jobService } from '@/services/jobService';
-import { resumeService } from '@/services/resumeService';
-import { JobMatch } from '@/types';
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { JobDetail } from "@/components/jobs/JobDetail";
+import { Spinner } from "@/components/common/Spinner";
+import { useAuth } from "@/hooks/useAuth";
+import { jobService } from "@/services/jobService";
+import { resumeService } from "@/services/resumeService";
+import { JobMatch, Job } from "@/types";
 
 export const JobDetailPage: React.FC = () => {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
   const { state } = useAuth();
-  
+
   const [jobMatch, setJobMatch] = useState<JobMatch | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+  const [job, setJob] = useState<Job | null>(null);
   useEffect(() => {
     // Redirect if not authenticated
     if (!state.isAuthenticated) {
-      navigate('/login');
+      navigate("/login");
       return;
     }
-    
+
     if (!jobId) {
-      navigate('/search');
+      navigate("/search");
       return;
     }
-    
+
     const fetchJobDetails = async () => {
       try {
         setIsLoading(true);
-        
+
         // Get the user's resume
         if (!state.user) {
-          throw new Error('User not found');
+          throw new Error("User not found");
         }
-        
-        const resume = await resumeService.getResumeByUserId(state.user.user_id);
+
+        const resume = await resumeService.getResumeByUserId(
+          state.user.user_id
+        );
         if (!resume) {
-          navigate('/profile');
+          navigate("/profile");
           return;
         }
-        
+
         // Get job details
         console.log("Getting job detailsby ID:", jobId);
         const job = await jobService.getJobById(jobId);
         console.log("Job details:", job);
+        setJob(job);
         // Get match history to find this job's match score
         console.log("Getting match history for user:", state.user.user_id);
-        const matchHistory = await jobService.getMatchHistory(state.user.user_id);
+        const matchHistory = await jobService.getMatchHistory(
+          state.user.user_id
+        );
         console.log("Match history:", matchHistory);
         // Find this job in match history
-        const match = matchHistory.matches.find(m => m.job_id === jobId);
-        
+        const match = matchHistory.matches.find((m) => m.job_id === jobId);
+
         if (match) {
           // Use existing match data
+          console.log("Match found:", match);
           setJobMatch(match);
         } else {
           // If job not found in match history, create a temporary match object
@@ -63,33 +69,29 @@ export const JobDetailPage: React.FC = () => {
           setJobMatch({
             resume_id: resume.resume_id,
             job_id: job.job_id,
-            match_score: 0, 
+            match_score: 0,
             matched_skills: [],
             missing_skills: job.features.skills,
             required_experience_years: job.features.required_experience_years,
-            resume_experience_years: resume.features.work_experience_years, 
+            resume_experience_years: resume.features.work_experience_years,
             job: job,
-            title: job.title,
-            company: job.company,
-            location: job.location,
-            created_at: new Date().toISOString(),
-            apply_url: job.apply_url,
-            id: 0,
           });
-          
-          setError('This job was not in your match results. Match score may not be accurate.');
+
+          setError(
+            "This job was not in your match results. Match score may not be accurate."
+          );
         }
       } catch (err) {
-        console.error('Error fetching job details:', err);
-        setError('Failed to load job details. Please try again.');
+        console.error("Error fetching job details:", err);
+        setError("Failed to load job details. Please try again.");
       } finally {
         setIsLoading(false);
       }
     };
-    
+
     fetchJobDetails();
   }, [jobId, state.isAuthenticated, state.user, navigate]);
-  
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -97,12 +99,14 @@ export const JobDetailPage: React.FC = () => {
       </div>
     );
   }
-  
+
   if (!jobMatch) {
     return (
       <div className="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
         <div className="bg-white rounded-lg shadow-md p-8 text-center">
-          <h2 className="text-lg font-medium text-gray-900 mb-2">Job not found</h2>
+          <h2 className="text-lg font-medium text-gray-900 mb-2">
+            Job not found
+          </h2>
           <p className="text-gray-500 mb-6">
             We couldn't find the job you're looking for.
           </p>
@@ -116,7 +120,7 @@ export const JobDetailPage: React.FC = () => {
       </div>
     );
   }
-  
+
   return (
     <div className="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
       <div className="mb-6 flex items-center justify-between">
@@ -139,14 +143,14 @@ export const JobDetailPage: React.FC = () => {
           Back to Results
         </Link>
       </div>
-      
+
       {error && (
         <div className="mb-6 bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded">
           {error}
         </div>
       )}
-      
-      <JobDetail jobMatch={jobMatch} />
+
+      {job && <JobDetail jobMatch={jobMatch} job={job} />}
     </div>
   );
 };

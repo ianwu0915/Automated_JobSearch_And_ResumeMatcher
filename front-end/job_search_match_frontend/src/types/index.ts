@@ -69,10 +69,6 @@ export interface JobFeatures {
 }
 
 export interface JobMatch {
-  id: number;
-  apply_url: string;
-  company: string;
-  title: string;
   resume_id: string;
   job_id: string;
   match_score: number;
@@ -80,8 +76,6 @@ export interface JobMatch {
   missing_skills: string[];
   required_experience_years: number;
   resume_experience_years: number;
-  location: string;
-  created_at: string;
   job: Job;
 }
 
