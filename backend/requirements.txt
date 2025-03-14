@@ -19,7 +19,9 @@ fakeredis==2.27.0
 scikit-learn==1.6.1
 linkedin-api>=2.0.0
 passlib==1.7.4
-pyjwt==2.11.0
+pyjwt==2.10.1
 email-validator==2.2.0
-pyhumps==3.1.0
-bycrypt==4.0.1
+pyhumps==3.8.0
+bcrypt==4.0.1
+nltk==3.9.1
+logtail-python==0.3.3

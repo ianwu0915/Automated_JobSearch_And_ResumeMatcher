@@ -2,18 +2,13 @@
 import psycopg2
 import redis
 import json
-import logging
-import hashlib
 from psycopg2.extras import RealDictCursor
 from contextlib import contextmanager
 from datetime import datetime
 
 from backend.core.config import settings
 from backend.service.redis_service import RedisClient
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+from backend.core.logger import logger
 
 # Initialize Redis connection
 redis = RedisClient()
@@ -40,7 +35,7 @@ def get_db_connection():
         
         return connection
     except Exception as e:
-        logging.error(f"Database connection error: {str(e)}")
+        logger.error(f"Database connection error: {str(e)}")
         raise Exception(f"Failed to connect to database: {str(e)}")
 
 @contextmanager
@@ -64,7 +59,7 @@ def get_db_cursor(commit=True):
     except Exception as e:
         if connection:
             connection.rollback()
-        logging.error(f"Database error: {str(e)}")
+        logger.error(f"Database error: {str(e)}")
         raise
     finally:
         if connection:

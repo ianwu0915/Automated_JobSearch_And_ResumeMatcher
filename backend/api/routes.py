@@ -1,11 +1,11 @@
 from fastapi import APIRouter, HTTPException, File, UploadFile, Query
 from typing import List
 import os
-
 from backend.service.redis_service import RedisClient
 from backend.service.resume_service import ResumeService
 from backend.service.job_service import JobService
 from backend.service.matching_service import MatchingService
+from backend.core.logger import logger
 
 router = APIRouter(prefix="/api")
 
@@ -16,6 +16,7 @@ matching_service = MatchingService(resume_service, job_service)
 
 @router.get("/")
 async def hello_world():
+    logger.info("Hello World") 
     return {"message": "Hello World"}
 
 @router.post("/resumes/upload", tags=["resumes"])
@@ -27,6 +28,7 @@ async def upload_resume(
     Upload and process a resume file.
     The processed resume will be stored in the database and used for subsequent job matching.
     """
+    logger.info("Uploading resume")
     try:
         # Save file temporarily
         temp_dir = "temp"
@@ -77,6 +79,7 @@ async def get_latest_resume_by_user_id(user_id: str = Query(..., description="Us
     """
     Get the most recent resume for a user.
     """
+    logger.info(f"Getting latest resume for user {user_id}")
     try:
         resume = await resume_service.get_resume_by_user_id(user_id)
         return resume
@@ -97,8 +100,10 @@ async def search_jobs_and_match(
     Search for jobs and match them with the user's most recently uploaded resume.
     Returns jobs sorted by match score.
     """
+    logger.info(f"Searching for jobs and matching with user {user_id}")
     try:
         # Get user's most recent resume
+        logger.info(f"Getting latest resume for user {user_id}")
         resume = await resume_service.get_resume_by_user_id(user_id)
         if not resume:
             raise HTTPException(
@@ -117,6 +122,7 @@ async def search_jobs_and_match(
         }
         
         # Search for jobs
+        logger.info(f"Searching for jobs with params {search_params}")
         jobs = await job_service.search_jobs_parallel([search_params])
         
         # Store jobs in database and cache if not already present
@@ -125,6 +131,7 @@ async def search_jobs_and_match(
             
         
         # Match jobs with resume
+        logger.info(f"Matching resume to jobs for user {user_id}")
         matches = await matching_service.match_resume_to_jobs(  
             # Assuming resume path is stored
             jobs,
@@ -132,6 +139,7 @@ async def search_jobs_and_match(
         )
         
         # Store match results
+        logger.info(f"Storing match results for user {user_id}")
         await matching_service.store_match_results(matches)
         
         return {
@@ -151,6 +159,7 @@ async def get_job(job_id: str):
     """
     Get details for a specific job, including any cached match results.
     """
+    logger.info(f"Getting job by id {job_id}")
     try:
         # Try to get from cache/database
         # print("Getting job by id", job_id)
@@ -178,6 +187,7 @@ async def get_match_history(
     """
     Get historical match results for a user.
     """
+    logger.info(f"Getting match history for user {user_id}")
     try:
         matches = await matching_service.get_job_and_matches_for_resume(user_id, limit, min_score)
         return {

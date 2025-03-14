@@ -1,4 +1,11 @@
 🚧 Work in Progress 🚧
+
+### To implement:
+- Don't use uuid to store data
+- Implement FAISS for matching and compare with current method
+- Check Redis Implementation
+- Migrate to AWS (Lambda? and RDS and API GateWay)
+
 # AI-Powered Job Search and Resume Matcher
 
 ## Architecture Overview
@@ -145,7 +152,7 @@ REDIS_PORT=6379
 
 ```bash
 # Create virtual environment
-python -m venv venv
+python3.11 -m venv venv
 
 # Activate virtual environment
 source venv/bin/activate  # Unix
@@ -154,9 +161,10 @@ venv\Scripts\activate    # Windows
 # Install dependencies
 pip install -r requirements.txt
 
-# Initialize database
-python -m backend.core.database
-```
+# Set up Redis and Postgres Server
+docker compose up -d
+
+# Run application
 
 ## Performance Considerations
 
@@ -216,3 +224,5 @@ Please read CONTRIBUTING.md for details on our code of conduct and the process f
 ## License
 
 This project is licensed under the MIT License - see the LICENSE.md file for details
+
+
