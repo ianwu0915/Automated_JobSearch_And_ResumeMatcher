@@ -7,6 +7,7 @@ from backend.api.models.user import UserCreate, User
 from backend.service.auth_service import AuthService
 from backend.repository.userRepositoty import UserRepository
 from backend.utils.security import get_current_user
+from backend.core.logger import logger
 
 auth_router = APIRouter(prefix="/api/auth", tags=["authentication"])
 
@@ -15,7 +16,7 @@ async def register(
     user_data: UserCreate,  
     user_repo: UserRepository = Depends(),
 ) -> Dict[str, Any]:
-    
+    logger.info(f"Registering user {user_data}")
     """Register a new user"""
     print("user_data", user_data)
     auth_service = AuthService(user_repo)
@@ -33,6 +34,7 @@ async def login(
     user_repo: UserRepository = Depends(),
 ) -> Dict[str, Any]:
     """Login for access token"""
+    logger.info(f"Logging in user {form_data.username}")
     auth_service = AuthService(user_repo)
     tokens = await auth_service.login(form_data.username, form_data.password)
     
@@ -44,6 +46,7 @@ async def refresh_token(
     user_repo: UserRepository = Depends(),
 ) -> Dict[str, Any]:
     """Get a new access token using refresh token"""
+    logger.info(f"Refreshing token")
     auth_service = AuthService(user_repo)
     tokens = await auth_service.refresh_token(refresh_token)
     
@@ -52,4 +55,5 @@ async def refresh_token(
 @auth_router.get("/me", response_model=User)
 async def get_me(current_user: User = Depends(get_current_user)) -> User:
     """Get current logged-in user details"""
+    logger.info(f"Getting current user {current_user}")
     return current_user

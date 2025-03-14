@@ -25,3 +25,4 @@ pyhumps==3.8.0
 bcrypt==4.0.1
 nltk==3.9.1
 logtail-python==0.3.3
+starlette==0.35.1

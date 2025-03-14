@@ -1,10 +1,14 @@
 🚧 Work in Progress 🚧
 
 ### To implement:
-- Don't use uuid to store data
+- Don't use uuid to store data?
+- Implement scheduling pre-fetch jobs to solve search job bottle-necks
+- Postgres add volume to persist data
+- Implement Middleware for CORS
 - Implement FAISS for matching and compare with current method
 - Check Redis Implementation
 - Migrate to AWS (Lambda? and RDS and API GateWay)
+- UI design
 
 # AI-Powered Job Search and Resume Matcher
 
